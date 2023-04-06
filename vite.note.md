@@ -37,3 +37,57 @@ styl/stylus - Only define is supported, which can be passed as an object.
 All preprocessor options also support the additionalData option, which can be used to inject extra code for each style content.
 ```
 
+## 特性
+### css预处理
+There is no need to install Vite-specific plugins for them, but the corresponding pre-processor itself must be installed:
+
+### JSON files can be directly imported
+
+### Pre-Bundling
+
+#### es-build
+Our current build tools for the web are 10-100x slower than they could be:
+The main goal of the esbuild bundler project is to bring about a new era of build tool performance, and create an easy-to-use modern bundler along the way.
+![image.png](https://pic1.zhimg.com/80/v2-b77d6af5e0f5bbdc6ac45a2b2f00d87c_1440w.webp)
+
+#### common-js -> esm
+
+``` javascript
+// input
+const dep = require('dep');
+console.log(dep);
+
+// output
+import * as dep$1 from 'dep';
+
+function getAugmentedNamespace(n) {
+  var a = Object.defineProperty({}, '__esModule', { value: true });
+  Object.keys(n).forEach(function (k) {
+    var d = Object.getOwnPropertyDescriptor(n, k);
+    Object.defineProperty(
+      a,
+      k,
+      d.get
+        ? d
+        : {
+            enumerable: true,
+            get: function () {
+              return n[k];
+            }
+          }
+    );
+  });
+  return a;
+}
+
+var dep = /*@__PURE__*/ getAugmentedNamespace(dep$1);
+
+console.log(dep);
+```
+
+### .env 
+
+``` javascript
+console.log(import.meta.env.VITE_SOME_KEY) // 123
+console.log(import.meta.env.DB_PASSWORD) // undefined
+```

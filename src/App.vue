@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import { now } from 'lodash-es'
 import HelloWorld from './components/HelloWorld.vue'
+console.log(now())
+// 注入的import对象
+console.log(import.meta, new URL('./img.png', import.meta.url).href, import.meta.env)
 </script>
 
 <template>
-  <header>
+    <!-- <header>
     <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
 
     <div class="wrapper">
@@ -15,9 +19,9 @@ import HelloWorld from './components/HelloWorld.vue'
         <RouterLink to="/about">About</RouterLink>
       </nav>
     </div>
-  </header>
-
-  <RouterView />
+  </header> -->
+    <img v-show="false" src="/static/bg.jpeg" />
+    <RouterView />
 </template>
 
 <style scoped>

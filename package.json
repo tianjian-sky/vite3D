@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "dev": "vite",
+        "dev": "cross-env NODE_ENV=production vite",
         "build": "run-p type-check build-only",
         "preview": "vite preview",
         "test:unit": "vitest",
@@ -15,8 +15,13 @@
         "format": "prettier --write src/"
     },
     "dependencies": {
+        "autoprefixer": "^10.4.14",
         "babylonjs": "^5.53.0",
+        "babylonjs-loaders": "^5.53.1",
+        "cross-env": "^7.0.3",
+        "lodash-es": "^4.17.21",
         "pinia": "^2.0.32",
+        "postcss-plugin-px2rem": "^0.8.1",
         "sass": "^1.60.0",
         "stylus": "^0.59.0",
         "three": "^0.151.3",
