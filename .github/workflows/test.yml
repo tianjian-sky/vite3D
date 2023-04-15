@@ -1,0 +1,19 @@
+name: test
+run-name: ${{ github.actor }} is learning GitHub Actions
+on:
+  workflow_call
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3 # This is an action that checks out your repository onto the runner, allowing you to run scripts or other actions against your code (such as build and test tools). You should use the checkout action any time your workflow will run against the repository's code.
+      - uses: actions/setup-node@v3 #  install the specified version of the Node.js (this example uses v14). This puts both the node and npm commands in your PATH.
+        with:
+          node-version: "14"
+      - run: npm i
+      - run: run-p type-check build-only
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm run lint;
+
