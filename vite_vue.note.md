@@ -267,3 +267,14 @@ export default {
   ],
 }
 ```
+
+### eslint 报$ref() is not defined
+配置eslint
+在eslintrc.cjs中加上globals 全局变量
+``` js
+    globals: {
+        $ref: 'readonly' // 开启reactivityTransform: true后，会报错：'$ref' is not defined 
+    },
+```
+
+[Specifying Globals](https://www.eslint.com.cn/docs/user-guide/configuring#specifying-globals)

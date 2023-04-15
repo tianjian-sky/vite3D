@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
 import { now } from 'lodash-es'
-import HelloWorld from './components/HelloWorld.vue'
 console.log(now())
 // 注入的import对象
 console.log(import.meta, new URL('./img.png', import.meta.url).href, import.meta.env)
