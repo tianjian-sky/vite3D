@@ -9,6 +9,9 @@ import { onMounted, onBeforeUnmount } from 'vue'
 import * as BABYLON from 'babylonjs'
 import type { AbstractMesh } from 'babylonjs'
 import '../../node_modules/babylonjs-loaders/babylon.glTF2FileLoader'
+interface Window {
+  LOADERS: any
+}
 BABYLON.SceneLoader.RegisterPlugin(new window.LOADERS.GLTFFileLoader())
 const container = $ref(null)
 
@@ -32,7 +35,7 @@ const init = function () {
     // Move the sphere upward 1/2 its height
     sphere.position.y = 1
     // // Built-in 'ground' shape.
-    // const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 6, height: 6 }, scene)
+    const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 6, height: 6 }, scene)
 
     createSkybox(scene)
     createGround(scene)

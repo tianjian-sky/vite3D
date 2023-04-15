@@ -1,7 +1,6 @@
 name: test
 run-name: ${{ github.actor }} is learning GitHub Actions
-on:
-  workflow_dispatch
+on: workflow_dispatch # workflow_dispatch 手动触发
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,10 +9,11 @@ jobs:
       - uses: actions/setup-node@v3 #  install the specified version of the Node.js (this example uses v14). This puts both the node and npm commands in your PATH.
         with:
           node-version: "14"
-      - run: npm i
-      - run: run-p type-check build-only
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - run: npm run lint;
-
+      - name: install and build
+        run: | # | 保留换行
+          npm i
+          npm run build
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: npm run lint;
