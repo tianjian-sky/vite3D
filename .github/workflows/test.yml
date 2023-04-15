@@ -18,6 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: print folder
-        run: ls ll
+        run: ls
       - name: eslint check
         run: npm run lint;
