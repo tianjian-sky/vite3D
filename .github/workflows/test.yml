@@ -13,10 +13,6 @@ jobs:
         run: | # | 保留换行
           npm i
           npm run build
-  lint:
-    needs: build # jobs之间默认是并行处理的
-    runs-on: ubuntu-latest
-    steps:
       - name: print folder
         run: ls
       - name: eslint check
