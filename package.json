@@ -16,6 +16,8 @@
     },
     "dependencies": {
         "@types/lodash-es": "^4.17.7",
+        "@vue-macros/short-vmodel": "^1.2.4",
+        "@vue-macros/volar": "^0.9.5",
         "autoprefixer": "^10.4.14",
         "babylonjs": "^5.53.0",
         "babylonjs-loaders": "^5.53.1",
@@ -26,6 +28,8 @@
         "sass": "^1.60.0",
         "stylus": "^0.59.0",
         "three": "^0.151.3",
+        "unplugin-vue-macros": "^2.0.0",
+        "vite-plugin-inspect": "^0.7.22",
         "vue": "^3.2.47",
         "vue-router": "^4.1.6"
     },

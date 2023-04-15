@@ -1,14 +1,34 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
+    "files": [],
+    "references": [
+        // {
+        //   "path": "./tsconfig.node.json"
+        // },
+        // {
+        //   "path": "./tsconfig.app.json"
+        // },
+        {
+            "path": "./tsconfig.vitest.json"
+        }
+    ],
+    "compilerOptions": {
+        // ...
+        "types": [
+            "unplugin-vue-macros/macros-global" /* ... */
+        ]
     },
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.vitest.json"
+    "vueCompilerOptions": {
+        "plugins": [
+            "@vue-macros/volar/define-options",
+            "@vue-macros/volar/define-models",
+            "@vue-macros/volar/define-props",
+            "@vue-macros/volar/define-props-refs",
+            "@vue-macros/volar/short-vmodel",
+            "@vue-macros/volar/define-slots",
+            "@vue-macros/volar/export-props"
+        ],
+        "shortVmodel": {
+            "prefix": "$"
+        }
     }
-  ]
 }

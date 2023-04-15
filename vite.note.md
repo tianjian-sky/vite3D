@@ -91,3 +91,64 @@ console.log(dep);
 console.log(import.meta.env.VITE_SOME_KEY) // 123
 console.log(import.meta.env.DB_PASSWORD) // undefined
 ```
+
+## unplugin
+
+### unplugin-vue-macros/vite
+提供许多宏，简化代码
+
+安装：
+1. npm i unplugin-vue-macros
+2. vite.config.js中接入
+
+``` javascript
+ plugins: [ // 增强型 macro
+    VueMacros({
+        setupBlock: true,
+        defineOptions: true,
+        shortEmits: true,
+        hoistStatic: true,
+        defineSlots: true,
+        defineModels: true,
+        namedTemplate: false,
+        plugins: {
+            vue: vue({
+                include: [/\.vue$/, /\.setup\.[cm]?[jt]sx?$/],
+                reactivityTransform: true // 省略访问ref时.value
+            }),
+            vueJsx: vueJsx(),
+        },
+    }),
+    Inspect({
+        outputDir: '.vite-inspect'
+    })
+],
+```
+
+3. 安装ts插件 @vue-macros/volar
+   
+4.ts.config中接入
+
+``` javascript
+ "compilerOptions": {
+        // ...
+        "types": [
+            "unplugin-vue-macros/macros-global" /* ... */
+        ]
+    },
+    "vueCompilerOptions": {
+        "plugins": [
+            "@vue-macros/volar/define-options",
+            "@vue-macros/volar/define-models",
+            "@vue-macros/volar/define-props",
+            "@vue-macros/volar/define-props-refs",
+            "@vue-macros/volar/short-vmodel",
+            "@vue-macros/volar/define-slots",
+            "@vue-macros/volar/export-props"
+        ],
+        "shortVmodel": {
+            "prefix": "$"
+        }
+    }
+```
+5.选装vite-plugin-inspect

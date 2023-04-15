@@ -1,9 +1,12 @@
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import stylus from 'stylus'
+
+import VueMacros from 'unplugin-vue-macros/vite'
+// import { transformShortVmodel } from '@vue-macros/short-vmodel'
+// import Inspect from 'vite-plugin-inspect'
 
 // https://vitejs.dev/config/
 export default defineConfig((vite) => {
@@ -15,9 +18,34 @@ export default defineConfig((vite) => {
         //     __APP_NAME_: 'VIDE_3D'
         // },
         publicDir: './static',
-        plugins: [vue({
-            reactivityTransform: true // 省略访问ref时.value
-        }), vueJsx()],
+        // plugins: [
+        //     vue({
+        //         reactivityTransform: true // 省略访问ref时.value
+        //     }),
+        //     vueJsx()
+        // ],
+        plugins: [ // 增强型 macro
+            VueMacros({
+                setupBlock: true,
+                defineOptions: true,
+                shortEmits: true,
+                hoistStatic: true,
+                defineSlots: true,
+                defineModels: true,
+                namedTemplate: false,
+                plugins: {
+                    vue: vue({
+                        include: [/\.vue$/, /\.setup\.[cm]?[jt]sx?$/],
+                        reactivityTransform: true // 省略访问ref时.value
+                    }),
+                    vueJsx: vueJsx(),
+                },
+            })
+            // ,
+            // Inspect({
+            //     outputDir: '.vite-inspect'
+            // })
+        ],
         resolve: {
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url))

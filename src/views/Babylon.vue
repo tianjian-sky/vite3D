@@ -7,11 +7,17 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount } from 'vue'
 import * as BABYLON from 'babylonjs'
-import type { AbstractMesh } from 'babylonjs'
+import type { Texture, AbstractMesh, Scene } from 'babylonjs'
 import '../../node_modules/babylonjs-loaders/babylon.glTF2FileLoader'
+
+defineOptions({
+  name: 'BabylonDemo'
+})
+
 interface Window {
   LOADERS: any
 }
+
 BABYLON.SceneLoader.RegisterPlugin(new window.LOADERS.GLTFFileLoader())
 const container = $ref(null)
 
@@ -42,7 +48,7 @@ const init = function () {
     createCharacter(scene)
     return scene
   }
-  const createSkybox = (scene) => {
+  const createSkybox = (scene: Scene) => {
     const skybox = BABYLON.MeshBuilder.CreateBox('skyBox', { size: 1000.0 }, scene)
     const skyboxMaterial = new BABYLON.StandardMaterial('skyBox', scene)
     skyboxMaterial.backFaceCulling = false
@@ -55,20 +61,21 @@ const init = function () {
     skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0)
     skybox.material = skyboxMaterial
   }
-  const createGround = (scene) => {
+  const createGround = (scene: Scene) => {
     const ground = BABYLON.MeshBuilder.CreateGround(
       'ground',
       { height: 50, width: 50, subdivisions: 4 },
       scene
     )
     const groundMaterial = new BABYLON.StandardMaterial('groundMaterial', scene)
-    groundMaterial.diffuseTexture = new BABYLON.Texture('/static/textures/wood.jpg', scene)
-    groundMaterial.diffuseTexture.uScale = 30
-    groundMaterial.diffuseTexture.vScale = 30
+    const texture: Texture = new BABYLON.Texture('/static/textures/wood.jpg', scene)
+    texture.uScale = 30
+    texture.vScale = 30
+    groundMaterial.diffuseTexture = texture
     groundMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1)
     ground.material = groundMaterial
   }
-  const createCharacter = (scene) => {
+  const createCharacter = (scene: Scene) => {
     // Load hero character and play animation
     BABYLON.SceneLoader.ImportMesh(
       '',
@@ -84,10 +91,12 @@ const init = function () {
         dancingGirl.translate(new BABYLON.Vector3(0, 0, 1), -2, BABYLON.Space.WORLD)
         //Lock camera on the character
         const sambaAnim = scene.getAnimationGroupByName('Samba')
-        //Play the Samba animation
-        sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false)
-        // const wakjubgAnim = scene.getAnimationGroupByName('Walking')
-        // wakjubgAnim.start(true, 1.0, wakjubgAnim.from, wakjubgAnim.to, false)
+        if (sambaAnim) {
+          //Play the Samba animation
+          sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false)
+          // const wakjubgAnim = scene.getAnimationGroupByName('Walking')
+          // wakjubgAnim.start(true, 1.0, wakjubgAnim.from, wakjubgAnim.to, false)
+        }
       },
       (e) => {
         console.log(e)

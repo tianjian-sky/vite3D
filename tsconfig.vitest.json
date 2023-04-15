@@ -1,9 +1,28 @@
 {
-  "extends": "./tsconfig.app.json",
-  "exclude": [],
-  "compilerOptions": {
-    "composite": true,
-    "lib": [],
-    "types": ["node", "jsdom"]
-  }
+    "extends": "./tsconfig.app.json",
+    "exclude": [],
+    "compilerOptions": {
+        "composite": true,
+        "lib": [],
+        "types": [
+            "unplugin-vue-macros/macros-global" /* ... */,
+            "node",
+            "jsdom"
+        ]
+    },
+    "vueCompilerOptions": {
+        "plugins": [
+            "@vue-macros/volar/define-options", // 给编译器看的
+            "@vue-macros/volar/define-models",
+            "@vue-macros/volar/define-props",
+            "@vue-macros/volar/define-props-refs",
+            "@vue-macros/volar/short-vmodel",
+            "@vue-macros/volar/define-slots",
+            "@vue-macros/volar/export-props"
+        ],
+        "shortVmodel": {
+            "prefix": "$"
+        },
+        "experimentalDefinePropProposal": "kevinEdition"
+    }
 }
