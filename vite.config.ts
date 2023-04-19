@@ -63,6 +63,9 @@ export default defineConfig((vite) => {
                 }
             }
         },
-        build: {}
+        build: {},
+        server: {
+            host: '0.0.0.0' // 本地开发暴露地址
+        }
     }
 })

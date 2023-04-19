@@ -1,12 +1,13 @@
 @import './base.css';
-
+/* 
 html {
     font-size: 100px;
-}
+} */
 
 #app {
     font-weight: normal;
     width: 100%;
+    height: 100vh;
 }
 
 a,
