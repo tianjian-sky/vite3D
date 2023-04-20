@@ -15,6 +15,17 @@ const clips = $ref({
   left: '',
   right: ''
 })
+const wrapper = $ref(null)
+const triggerStartEvent = $ref('pointerdown')
+const moveDistance = $ref({
+  offsetX: 0,
+  offsetY: 0,
+  bbox: null
+})
+const triggerOffset = $ref({
+  x: 0,
+  y: 0
+})
 const dirClass = $ref('')
 const initLayout = () => {
   const radius = 0.5 * size
@@ -54,8 +65,73 @@ const initLayout = () => {
     radius - quaterProj
   } Z`
 }
-const handleClick = (e) => {
-  console.log('click')
+const _inRange = (val, min, max) => {
+  return val >= min && val <= max
+}
+const _getDist = (x1, y1, x2, y2) => {
+  return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
+}
+const _clamp = (val, min, max) => {
+  if (val < min) {
+    return min
+  } else if (val > max) {
+    return max
+  } else {
+    return val
+  }
+}
+const onTriggerStart = (e) => {
+  const triggerRadius = innerSize / 2
+  moveDistance.bbox = wrapper.getBoundingClientRect()
+  moveDistance.offsetX = e.clientX - moveDistance.bbox.left
+  moveDistance.offsetY = e.clientY - moveDistance.bbox.top
+  if (_getDist(moveDistance.offsetX, moveDistance.offsetY, 0.5 * size, 0.5 * size) <= 0.5 * size) {
+    if (
+      _getDist(
+        moveDistance.offsetX,
+        moveDistance.offsetY,
+        0.5 * size + triggerOffset.x,
+        0.5 * size + triggerOffset.y
+      ) >
+      innerSize / 2
+    ) {
+      let newX = _clamp(moveDistance.offsetX, triggerRadius, size - triggerRadius)
+      let newY = _clamp(moveDistance.offsetY, triggerRadius, size - triggerRadius)
+      triggerOffset.x = newX - 0.5 * size
+      triggerOffset.y = newY - 0.5 * size
+    } else {
+      triggerOffset.x = 0
+      triggerOffset.y = 0
+    }
+    document.body.addEventListener('pointermove', onTriggerMove)
+    document.body.addEventListener('pointerup', onTriggerMoveEnd)
+  }
+}
+const onTriggerMove = (e) => {
+  const radius = 0.5 * size
+  const innerRadius = 0.5 * innerSize
+  const pos = {
+    offsetX: e.clientX - moveDistance.bbox.left,
+    offsetY: e.clientY - moveDistance.bbox.top
+  }
+  const diff = {
+    x: pos.offsetX - moveDistance.offsetX,
+    y: pos.offsetY - moveDistance.offsetY
+  }
+  let newX = triggerOffset.x + diff.x
+  let newY = triggerOffset.y + diff.y
+  if (_getDist(newX + radius, newY + radius, radius, radius) <= radius - innerRadius) {
+    triggerOffset.x = newX
+    triggerOffset.y = newY
+  }
+  moveDistance.offsetX = pos.offsetX
+  moveDistance.offsetY = pos.offsetY
+}
+const onTriggerMoveEnd = (e) => {
+  triggerOffset.x = 0
+  triggerOffset.y = 0
+  document.body.removeEventListener('pointermove', onTriggerMove)
+  document.body.removeEventListener('pointerup', onTriggerMoveEnd)
 }
 onMounted(() => {
   initLayout()
@@ -63,7 +139,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="navigator-controller" :class="[dirClass]" :style="{width: size + 'px', height: size + 'px'}">
+    <div class="navigator-controller" ref="wrapper" :class="[dirClass]" :style="{width: size + 'px', height: size + 'px'}" @[triggerStartEvent]="onTriggerStart">
         <a class="navigator-controller-button navigator-controller-top" :style="{clipPath: `path('${clips.top}')`}" @click="handleClick">
             <label class="label" :style="{marginTop: `${-.5 * innerSize}px`}">{{topText}}</label>
         </a>
@@ -76,7 +152,7 @@ onMounted(() => {
         <a class="navigator-controller-button navigator-controller-right" :style="{clipPath: `path('${clips.right}')`}">
             <label class="label" :style="{marginLeft: `${.5 * innerSize}px`}">{{rightText}}</label>
         </a>
-        <div class="center-circle" :style="{width: `${innerSize}px`, height: `${innerSize}px`}"></div>
+        <div class="center-circle" :style="{width: `${innerSize}px`, height: `${innerSize}px`, marginLeft: `${triggerOffset.x}px`, marginTop: `${triggerOffset.y}px`}"></div>
     </div>
 </template>
 
@@ -105,6 +181,7 @@ onMounted(() => {
     position: absolute;
     cursor: pointer;
     color: rgb(255, 255, 255);
+    user-select: none;
   }
   &-button {
     display: flex;
