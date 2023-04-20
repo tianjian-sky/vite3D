@@ -7,6 +7,7 @@ const { topText, bottomText, leftText, rightText, innerSize, size } = defineProp
   rightText: string
   size: number
   innerSize: number
+  borderSize: number
 }>()
 const clips = $ref({
   top: '',
@@ -14,11 +15,12 @@ const clips = $ref({
   left: '',
   right: ''
 })
+const dirClass = $ref('')
 const initLayout = () => {
   const radius = 0.5 * size
   const innerRadius = 0.5 * innerSize
-  const quaterProj = radius * Math.sin(Math.PI / 4)
-  const innerQuaterProj = innerRadius * Math.sin(Math.PI / 4)
+  const quaterProj = Math.round(radius * Math.sin(Math.PI / 4))
+  const innerQuaterProj = Math.round(innerRadius * Math.sin(Math.PI / 4))
   // init top
   clips.top = `M ${radius - innerQuaterProj} ${
     radius - innerQuaterProj
@@ -61,7 +63,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="navigator-controller" :style="{width: size + 'px', height: size + 'px'}">
+    <div class="navigator-controller" :class="[dirClass]" :style="{width: size + 'px', height: size + 'px'}">
         <a class="navigator-controller-button navigator-controller-top" :style="{clipPath: `path('${clips.top}')`}" @click="handleClick">
             <label class="label" :style="{marginTop: `${-.5 * innerSize}px`}">{{topText}}</label>
         </a>
@@ -80,8 +82,25 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .navigator-controller {
-  position: relative;
+  --borderSize: 2px;
+  position: absolute;
+  right: 0;
+  top: 0;
   border-radius: 50%;
+  border: var(--borderSize) solid transparent;
+  //   box-sizing: content-box;
+  &.top {
+    border-top: var(--borderSize) solid rgb(246, 93, 48);
+  }
+  &.bottom {
+    border-bottom: var(--borderSize) solid rgb(246, 93, 48);
+  }
+  &.left {
+    border-left: var(--borderSize) solid rgb(246, 93, 48);
+  }
+  &.right {
+    border-right: var(--borderSize) solid rgb(246, 93, 48);
+  }
   .label {
     position: absolute;
     cursor: pointer;
@@ -103,31 +122,31 @@ onMounted(() => {
     }
   }
   .navigator-controller-top {
-    left: 0;
-    top: 0;
-    height: 50%;
-    width: 100%;
+    left: calc(var(--borderSize) * -1);
+    top: calc(var(--borderSize) * -1);
+    height: calc(50% + var(--borderSize));
+    width: calc(100% + var(--borderSize) * 2);
   }
   .navigator-controller-bottom {
     position: absolute;
-    left: 0;
+    left: calc(var(--borderSize) * -1);
     top: 50%;
-    height: 50%;
-    width: 100%;
+    height: calc(50% + var(--borderSize));
+    width: calc(100% + var(--borderSize) * 2);
   }
   .navigator-controller-left {
     position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 50%;
+    left: calc(var(--borderSize) * -1);
+    top: calc(var(--borderSize) * -1);
+    height: calc(100% + var(--borderSize) * 2);
+    width: calc(50% + var(--borderSize));
   }
   .navigator-controller-right {
     position: absolute;
     left: 50%;
-    top: 0;
-    height: 100%;
-    width: 50%;
+    top: calc(var(--borderSize) * -1);
+    height: calc(100% + var(--borderSize) * 2);
+    width: calc(50% + var(--borderSize));
   }
   .center-circle {
     position: absolute;
