@@ -6,11 +6,12 @@ module.exports = {
         $ref: 'readonly' // 开启reactivityTransform: true后，会报错：'$ref' is not defined 
     },
     root: true,
-    'extends': [
+    extends: [
         'plugin:vue/vue3-essential',
         'eslint:recommended',
         '@vue/eslint-config-typescript',
-        '@vue/eslint-config-prettier/skip-formatting'
+        '@vue/eslint-config-prettier/skip-formatting',
+        './.eslintrc-auto-import.json'
     ],
     overrides: [
         {

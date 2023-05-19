@@ -3,6 +3,8 @@ import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import stylus from 'stylus'
+import AutoImport from 'unplugin-auto-import/vite'
+import autoImportConfig from './autoImport.config'
 
 import VueMacros from 'unplugin-vue-macros/vite'
 // import { transformShortVmodel } from '@vue-macros/short-vmodel'
@@ -40,7 +42,8 @@ export default defineConfig((vite) => {
                     }),
                     vueJsx: vueJsx(),
                 },
-            })
+            }),
+            AutoImport(autoImportConfig)
             // ,
             // Inspect({
             //     outputDir: '.vite-inspect'
@@ -66,6 +69,7 @@ export default defineConfig((vite) => {
         build: {},
         server: {
             host: '0.0.0.0' // 本地开发暴露地址
-        }
+        },
+        base: process.env.NODE_ENV == 'production' ? '/vite3D' : '/'
     }
 })

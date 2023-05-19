@@ -152,3 +152,55 @@ console.log(import.meta.env.DB_PASSWORD) // undefined
     }
 ```
 5.选装vite-plugin-inspect
+
+6. 配置unplugin-auto-import
+
+[配置unplugin-auto-import](https://www.npmjs.com/package/unplugin-auto-import)
+
+## 6.1 与ts环境集成
+
+``` javascript
+AutoImport({
+  dts: true // or a custom path
+})
+```
+> Enable options.dts so that auto-imports.d.ts file is automatically generated
+> Make sure auto-imports.d.ts is not excluded in tsconfig.json
+
+## 6.2 与eslint集成
+
+1.Enable eslintrc.enabled
+
+``` javascript
+
+eslintrc: {
+    enabled: true, // Default `false`
+    filepath: './.eslintrc-auto-import.json', // Default `./.eslintrc-auto-import.json`
+    globalsPropValue: true, // Default `true`, (true | false | 'readonly' | 'readable' | 'writable' | 'writeable')
+  }
+
+```
+
+2. Update your eslintrc: Extending Configuration Files
+
+``` javascript
+// .eslintrc.js
+module.exports = {
+  extends: [
+    './.eslintrc-auto-import.json',
+  ],
+}
+```
+
+## 7 服务器构建
+
+### 配置baseurl， 用于引导index.html引入的静态资源
+### 配置nginx 
+
+``` nginx
+ location /vite3D {
+    root   html;
+    index  index.html index.htm;
+    try_files $uri $uri/ /vite3D/index.html;
+}
+```
