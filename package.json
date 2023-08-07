@@ -2,6 +2,7 @@
     "name": "babylondemo",
     "version": "0.0.0",
     "private": true,
+    "type": "module",
     "scripts": {
         "dev": "cross-env NODE_ENV=development vite ",
         "build": "cross-env NODE_ENV=production run-p build-only",

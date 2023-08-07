@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     // targets to transform
     include: [
         /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx

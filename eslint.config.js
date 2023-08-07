@@ -1,7 +1,7 @@
 /* eslint-env node */
-require('@rushstack/eslint-patch/modern-module-resolution')
+// import * from '@rushstack/eslint-patch/modern-module-resolution'
 
-module.exports = {
+export default {
     globals: {
         $ref: 'readonly' // 开启reactivityTransform: true后，会报错：'$ref' is not defined 
     },

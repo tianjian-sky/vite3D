@@ -204,3 +204,55 @@ module.exports = {
     try_files $uri $uri/ /vite3D/index.html;
 }
 ```
+
+## 8.其他
+### .eslintrc.js 与.eslint.cjs的区别
+[配置文件格式](https://zh-hans.eslint.org/docs/latest/use/configure/configuration-files)
+```
+JavaScript - 使用 .eslintrc.js 并导出包括配置的对象。 JavaScript (ESM) - 当在 JavaScript 包中运行 ESLint 时，且其 package.json 中指定 "type":"module" 时，使用 .eslintrc.cjs。请注意 ESLint 目前不支持 ESM 配置。 YAML - 使用 .eslintrc.yaml 或 .eslintrc.yml 来定义配置结构。 JSON - 使用 .eslintrc.json 来定义配置结构。ESLint JSON 文件中也可以使用 JavaScript 风格注释。 package.json - 在 package.json 文件中创建 eslintConfig 属性并在那里定义你的配置。
+```
+
+### package.json 的type字段
+
+[npm](https://docs.npmjs.com/cli/v9/configuring-npm/package-json)
+[package.json中type的含义](http://www.manongjc.com/detail/22-ojhfzhiuhfojawa.html)
+
+type字段的产生用于定义package.json文件和该文件所在目录根目录中.js文件和无拓展名文件的处理方式。值为'moduel'则当作es模块处理；值为'commonjs'则被当作commonJs模块处理
+
+
+当package.json.type = 'module'时，配置autoImport.config.js的导出为commonjs格式，则出现以下报错
+
+```
+module.exports = {
+    ...
+}
+```
+
+```
+ERROR: No matching export in "autoImport.config.js" for import "default"
+```
+
+#### 不管type字段的值是多少, 以.mjs后缀名的文件总是被当作ES6模块,而以.cjs后缀名的文件总是被当成CommonJS模块
+
+
+目前node默认的是如果pacakage.json没有定义type字段，则按照commonJs规范处理
+node官方建议包的开发者明确指定package.json中type字段的值
+无论package.json中的type字段为何值，.mjs的文件都按照es模块来处理，.cjs的文件都按照commonJs模块来处理
+
+### commonjs 改为 esm
+#### 解决 __dirname is not defined in ES module scope 报错
+
+原因：__dirname 是commonjs环境自动注入的变量，换成esm环境自然无此变量
+
+``` javascript
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+```
+
+### import.meta
+
+import.meta是一个给 JavaScript 模块暴露特定上下文的元数据属性的对象。它包含了这个模块的信息，比如说这个模块的 URL。
+
+import.meta对象是由 ECMAScript 实现的，它带有一个null的原型对象。这个对象可以扩展，并且它的属性都是可写，可配置和可枚举的。
+
+[import.meta](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/import.meta)
