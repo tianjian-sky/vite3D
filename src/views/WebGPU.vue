@@ -1,13 +1,15 @@
 <template>
     <div class="webgpu">
         <div class="main">
-
+            <component :is="current"></component>
         </div>
         <div class="menus">
             <div v-for="chapter in menus" :key="chapter.id">
                 <p class="chapter-title">{{ chapter.title }}</p>
                 <ul class="examples">
-                    <li v-for="item in chapter.children"><a>{{ item.title }}</a></li>
+                    <li :class="{ active: current == item.id }" v-for="item in chapter.children" @click="current = item.id">
+                        <a>{{ item.title }}</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -15,30 +17,26 @@
 </template>
 
 <script setup lang="ts">
+import ch1_1 from '@/components/webgpu/1/1.1.vue'
+defineOptions({
+    name: 'WebGpu',
+    components: {
+        ch1_1
+    }
+})
 const menus = ref([
     {
         id: '1',
         title: 'chapter-1',
         children: [{
-            id: '1.1',
+            id: 'ch1_1',
             title: '1.1'
         }]
     }
 ])
-defineOptions({
-    name: 'WebGpu'
-})
-
-interface Window {
-    LOADERS: any
-}
-
-onBeforeUnmount(() => {
-    // window.removeEventListener('resize', resizeFn)
-})
-
-onMounted(() => {
-})
+const current = ref('')
+onBeforeUnmount(() => { })
+onMounted(() => { })
 </script>
 
 <style lang="scss" scoped>
@@ -62,6 +60,14 @@ onMounted(() => {
             flex: 0 0 100px;
             height: 100%;
             overflow: hidden;
+
+            .examples li {
+                cursor: pointer;
+
+                &.active {
+                    color: blue;
+                }
+            }
         }
     }
 }

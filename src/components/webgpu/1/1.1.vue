@@ -5,9 +5,13 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+defineOptions({
+    name: 'ch1_1'
+})
 const title = ref('1-1 hello world')
 const supportGpu = ref(true)
+const gpu = navigator.gpu
 const adapter = ref(null)
 const device = ref(null)
 const canvas = ref(null)
@@ -17,19 +21,19 @@ const canvasStyle = ref({
 })
 const ctx = ref(null)
 async function initGpu() {
-    if (!navigator.gpu) {
-        throw Error("WebGPU not supported.")
+    if (!gpu) {
         supportGpu.value = false
+        throw Error("WebGPU not supported.")
     }
-    const _adapter = await navigator.gpu.requestAdapter()
-    if (!adapter) {
+    adapter.value = await gpu.requestAdapter()
+    if (!adapter.value) {
         throw Error("Couldn't request WebGPU adapter.")
-    } else {
-        adapter.value = _adapter
     }
-    const _device = await adapter.requestDevice()
-
-    //...
+    device.value = await adapter.value.requestDevice()
+    if (!device.value) {
+        throw Error("Couldn't request WebGPU device.")
+    }
+    console.warn(gpu, adapter.value, device.value)
 }
 const initCanvas = () => {
     canvasStyle.width = canvas.value.clientWidth
@@ -50,11 +54,13 @@ onMounted(() => {
 
     .title {
         flex: 0 0 auto;
+        text-align: center;
     }
 
     canvas {
         flex: 1;
         width: 100%;
+        background: gray;
     }
 }
 </style>
