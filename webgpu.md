@@ -1,7 +1,7 @@
 # WebGPU API
 
 ## 概念
-
+[WebGL 与 WebGPU 比对[1] 前奏](https://zhuanlan.zhihu.com/p/457600943)
 ### WebGL
 WebGL 是 OpenGL ES 2.0 图形库的 JavaScript 端口
 
@@ -46,6 +46,35 @@ Rust是一门系统编程语言 [1] ，专注于安全 [2] ，尤其是并发安
 
 Rust致力于成为优雅解决高并发和高安全性系统问题的编程语言 [18] ，适用于大型场景，即创造维护能够保持大型系统完整的边界。这就导致了它强调安全，内存布局控制和并发的特点。标准Rust性能与标准C++性能不相上下。
 
+### CommandBuffer
+[浅谈CommandBuffer](https://zhuanlan.zhihu.com/p/564187447)
+#### CPU 负载问题
+每一次调用 gl.xxx 时，都会完成 CPU 到 GPU 的信号传递，改变 GPU 的状态，是立即生效的。熟悉计算机基础的朋友应该知道，计算机内部的时间和硬件之间的距离有多么重要，世人花了几十年时间无不为信号传递付出了努力，上述任意一条 gl 函数改变 GPU 状态的过程，大致要走完 CPU ~ 总线 ~ GPU 这么长一段距离。
+
+我们都知道，办事肯定是一次性备齐材料的好，不要来来回回跑那么多遍，而 OpenGL 就是这样子的。有人说为什么要这样而不是改成一次发送的样子？历史原因，OpenGL 盛行那会儿 GPU 的工作没那么复杂，也就不需要那么超前的设计。
+
+综上所述，WebGL 是存在 CPU 负载隐患的，是由于 OpenGL 这个状态机制决定的。
+
+现代三大图形API 可不是这样，它们更倾向于先把东西准备好，最后提交给 GPU 的就是一个完整的设计图纸和缓冲数据，GPU 只需要拿着就可以专注办事。
+
+#### WebGPU 的装配式编码风格
+WebGPU 虽然也有一个总管家一样的对象 —— device，类型是 GPUDevice，表示可以操作 GPU 设备的一个高层级抽象，它负责创建操作图形运算的各个对象，最后装配成一个叫 “CommandBuffer（指令缓冲，GPUCommandBuffer）”的对象并提交给队列，这才完成 CPU 这边的劳动。
+
+所以，device.createXXX 创建过程中的对象时，并不会像 WebGL 一样立即通知 GPU 完成状态的改变，而是在 CPU 端写的代码就从逻辑、类型上确保了待会传递给 GPU 的东西是准确的，并让他们按自己的坑站好位，随时等待提交给 GPU。
+
+指令缓冲对象具备了完整的数据资料（几何、纹理、着色器、管线调度逻辑等），GPU 一拿到就知道该干什么。
+
+![vulkan的CommandBuffer](https://pic1.zhimg.com/80/v2-791cad38fb58064cf6f251f38b4c2b18_720w.webp)
+![Metal的CommandBuffer](https://pic2.zhimg.com/80/v2-b517268ede90bf15af8ce6a12fba0011_720w.webp)
+
+### 多线程与强大的通用计算（GPGPU）能力
+WebGL 的总管家对象是 gl 变量，它必须依赖 HTML Canvas 元素，也就是说必须由主线程获取，也只能在主线程调度 GPU 状态，WebWorker 技术的多线程能力只能处理数据，比较鸡肋。
+
+WebGPU 改变了总管家对象的获取方式，adapter 对象所依赖的 navigator.gpu 对象在 WebWorker 中也可以访问，所以在 Worker 中也可以创建 device，也可以装配出指令缓冲，从而实现多线程提交指令缓冲，实现 CPU 端多线程调度 GPU 的能力。
+
+### 通用计算（GPGPU）
+WebGPU 出厂就带这玩意儿，通过计算着色器，使用 GPU 中 CU（Compute Unit，计算单元）旁边的共享内存，速度比普通的显存速度快得多。
+
 ## 使用
 
 ### 程序步骤
@@ -60,6 +89,95 @@ Rust致力于成为优雅解决高并发和高安全性系统问题的编程语�
     iii. 运行指令，指定使用哪些管线、从哪个缓冲区获取数据、运行多少次绘制操作等。
     iv. 完成指令列表后，将其封装到指令缓冲区中。
     v. 通过逻辑设备的指令队列提交指令到缓冲区。
+
+```
+// 在异步函数中
+const device = await adapter.requestDevice()
+const buffer = device.createBuffer({
+  /* 装配几何，传递内存中的数据，最终成为 vertexAttribute 和 uniform 等资源 */
+})
+const texture = device.createTexture({
+  /* 装配纹理和采样信息 */
+})
+
+const pipelineLayout = device.createPipelineLayout({
+  /* 创建管线布局，传递绑定组布局对象 */
+})
+
+/* 创建着色器模块 */
+const vertexShaderModule = device.createShaderModule({ /* ... */ })
+const fragmentShaderModule = device.createShaderModule({ /* ... */ })
+
+/*
+计算着色器可能用到的着色器模块
+const computeShaderModule = device.createShaderModule({ /* ... * / })
+*/
+
+const bindGroupLayout = device.createBindGroupLayout({
+  /* 创建绑定组的布局对象 */
+})
+
+const pipelineLayout = device.createPipelineLayout({
+  /* 传递绑定组布局对象 */
+})
+
+/*
+上面两个布局对象其实可以偷懒不创建，绑定组虽然需要绑定组布局以
+通知对应管线阶段绑定组的资源长啥样，但是绑定组布局是可以由
+管线对象通过可编程阶段的代码自己推断出来绑定组布局对象的
+本示例代码保存了完整的过程
+*/
+
+const pipeline = device.createRenderPipeline({
+  /* 
+  创建管线
+  指定管线各个阶段所需的素材
+  其中有三个阶段可以传递着色器以实现可编程，即顶点、片段、计算 
+  每个阶段还可以指定其所需要的数据、信息，例如 buffer 等
+
+  除此之外，管线还需要一个管线的布局对象，其内置的绑定组布局对象可以
+  让着色器知晓之后在通道中使用的绑定组资源是啥样子的
+  */
+})
+
+const bindGroup_0 = deivce.createBindGroup({
+  /* 
+  资源打组，将 buffer 和 texture 归到逻辑上的分组中，
+  方便各个过程调用，过程即管线，
+  此处必须传递绑定组布局对象，可以从管线中推断获取，也可以直接传递绑定组布局对象本身
+  */
+})
+
+const commandEncoder = device.createCommandEncoder() // 创建指令缓冲编码器对象
+const renderPassEncoder = commandEncoder.beginRenderPass() // 启动一个渲染通道编码器
+// 也可以启动一个计算通道
+// const computePassEncoder = commandEncoder.beginComputePass({ /* ... */ }) 
+
+/*
+以渲染通道为例，使用 renderPassEncoder 完成这个通道内要做什么的顺序设置，例如
+*/
+
+// 第一道绘制，设置管线0、绑定组0、绑定组1、vbo，并触发绘制
+renderPassEncoder.setPipeline(renderPipeline_0)
+renderPassEncoder.setBindGroup(0, bindGroup_0)
+renderPassEncoder.setBindGroup(1, bindGroup_1)
+renderPassEncoder.setVertexBuffer(0, vbo, 0, size)
+renderPassEncoder.draw(vertexCount)
+
+// 第二道绘制，设置管线1、另一个绑定组并触发绘制
+renderPassEncoder.setPipeline(renderPipeline_1)
+renderPassEncoder.setBindGroup(1, another_bindGroup)
+renderPassEncoder.draw(vertexCount)
+
+// 结束通道编码
+renderPassEncoder.endPass()
+
+// 最后提交至 queue，也即 commandEncoder 调用 finish 完成编码，返回一个指令缓冲
+device.queue.submit([
+  commandEncoder.finish()
+])
+```
+
 
 ### 获取设备的访问权限
 
