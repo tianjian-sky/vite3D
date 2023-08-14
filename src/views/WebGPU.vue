@@ -18,10 +18,13 @@
 
 <script setup lang="ts">
 import ch1_1 from '@/components/webgpu/1/1.1.vue'
+import ch1_2 from '@/components/webgpu/1/1.2.vue'
+
 defineOptions({
     name: 'WebGpu',
     components: {
-        ch1_1
+        ch1_1,
+        ch1_2
     }
 })
 const menus = ref([
@@ -31,6 +34,10 @@ const menus = ref([
         children: [{
             id: 'ch1_1',
             title: '1.1'
+        },
+        {
+            id: 'ch1_2',
+            title: '1.2'
         }]
     }
 ])

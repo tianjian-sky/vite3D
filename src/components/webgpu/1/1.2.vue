@@ -6,10 +6,100 @@
 </template>
 
 <script setup lang="ts">
-defineOptions({
-    name: 'Hello world'
+
+/**
+GPUTexture 的创建
+调用 device.createTexture() 即可创建一个纹理对象，你可以通过传参指定它的用途、格式、维度等属性。它扮演的更多时候是一个数据容器，也就是纹素的容器。
+
+// 普通贴图
+const texture = device.createTexture({
+  size: [512, 512, 1],
+  format: 'rgba8unorm',
+  usage: GPUTextureUsage.TEXTURE_BINDING 
+        | GPUTextureUsage.COPY_DST
+        | GPUTextureUsage.RENDER_ATTACHMENT,
 })
-const title = ref('1-1 hello world')
+
+// 深度纹理
+const depthTexture = device.createTexture({
+  size: [800, 600],
+  format: 'depth24plus',
+  usage: GPUTextureUsage.RENDER_ATTACHMENT,
+})
+
+// 从 canvas 中获取纹理
+const gpuContext = canvas.getContext('webgpu')
+const canvasTexture = gpuContext.getCurrentTexture()
+
+创建纹理视图
+
+const view = texture.createView()
+
+// 在渲染通道的颜色附件中
+const renderPassDescriptor = {
+  colorAttachments: [
+    {
+      view: canvasTexture.createView(),
+      // ...
+    }
+  ]
+}
+*/
+
+/**
+ * renderPassDescriptor
+ * 
+ * const clearColor = { r: 0.0, g: 0.5, b: 1.0, a: 1.0 };
+
+    const renderPassDescriptor = {
+        colorAttachments: [
+            {
+            clearValue: clearColor,
+            loadOp: "clear",
+            storeOp: "store",
+            view: context.getCurrentTexture().createView(),
+            },
+        ],
+    };
+
+    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+ * 
+ * 调用 GPUCommandEncoder.beginRenderPass() (en-US) 创建 GPURenderPassEncoder (en-US) 实例来开始运行渲染通道。
+ * 该方法采用一个描述符对象作为参数，唯一的必须属性是 colorAttachments 数组。在该实例中，我们指定了：
+
+    要渲染到的纹理视图；我们通过 context.getCurrentTexture().createView() (en-US) 从 <canvas> 创建一个新视图。
+    纹理视图一旦加载并且在任何绘制发生之前，将“清除”视图到一个指定的颜色。这就是导致三角形后面出现蓝色背景的原因。
+    我们还要在当前的渲染通道中存储这个颜色附件的值。
+ *
+ */
+
+/**
+ * descriptor
+    An object containing the following properties:
+    const renderPassDescriptor = {
+        colorAttachments: [], // An array of objects defining the color attachments that will be output to when executing this render pass.
+        depthStencilAttachment: {}, // An object defining the depth/stencil attachment that will be output to and tested against when executing this render pass.
+        maxDrawCount: 1, // A number indicating the maximum number of draw calls that will be done in the render pass. This is used by some implementations to size work injected before the render pass. You should keep the default value — 50000000 — unless you know that more draw calls will be done.
+        occlusionQuerySet: {}, // The GPUQuerySet that will store the occlusion query (遮挡查询) results for this pass.
+        timestampWrites: [] // An array of objects defining where and when timestamp query values will be written for this pass. These objects have the following properties:
+    };
+ */
+
+/**
+ * descriptor.colorAttachments:
+ *  {
+ *        clearValue: [], // A color value to clear the view texture to, prior to executing the render pass. This value is ignored if loadOp is not set to "clear". 
+ *        loadOp: 'load|clear', // An enumerated value indicating the load operation to perform on view prior to executing the render pass.
+ *        storeOp: 'store|discard', // An enumerated value indicating the store operation to perform on view after executing the render pass.
+ *        resolveTarget: {}, // A GPUTextureView object representing the texture subresource that will receive the resolved output for this color attachment if view is multisampled.
+ *        view: {}, // A GPUTextureView object representing the texture subresource that will be output to for this color attachment.
+ * }
+ */
+
+defineOptions({
+    name: '1.2'
+})
+const title = ref('1-2 MSAA')
 const supportGpu = ref(true)
 const gpu = navigator.gpu
 const adapter = ref(null)
@@ -133,6 +223,9 @@ const initPipeline = () => {
             topology: "triangle-list",
         },
         layout: "auto",
+        multisample: {
+            count: sampleCount.value
+        }
     }
     // represents a pipeline that controls the vertex and fragment shader stages
     renderPipeline.value = device.value.createRenderPipeline(pipelineDescriptor)
@@ -144,13 +237,21 @@ const initCommanderEncoder = () => {
 const initRenderPassEncoder = () => {
     // encodes commands related to controlling the vertex and fragment shader stages, as issued by a GPURenderPipeline. It forms part of the overall encoding activity of a GPUCommandEncoder
     const clearColor = { r: 0.0, g: 0.5, b: 1.0, a: 1.0 }
+    const textrue = device.value.createTexture({
+        size: [canvas.value.width, canvas.value.height],
+        sampleCount: sampleCount.value,
+        format: navigator.gpu.getPreferredCanvasFormat(),
+        usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
     const renderPassDescriptor = {
         colorAttachments: [
             {
                 clearValue: clearColor,
                 loadOp: "clear",
                 storeOp: "store",
-                view: gpuContext.getCurrentTexture().createView(),
+                // view: gpuContext.getCurrentTexture().createView(),
+                view: textrue.createView(),
+                resolveTarget: gpuContext.getCurrentTexture().createView(),
             },
         ],
     }
