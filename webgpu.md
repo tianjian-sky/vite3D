@@ -51,6 +51,22 @@ Rust致力于成为优雅解决高并发和高安全性系统问题的编程语�
 #### CPU 负载问题
 每一次调用 gl.xxx 时，都会完成 CPU 到 GPU 的信号传递，改变 GPU 的状态，是立即生效的。熟悉计算机基础的朋友应该知道，计算机内部的时间和硬件之间的距离有多么重要，世人花了几十年时间无不为信号传递付出了努力，上述任意一条 gl 函数改变 GPU 状态的过程，大致要走完 CPU ~ 总线 ~ GPU 这么长一段距离。
 
+
+一次使用framebuffer的webgl绘制过程
+``` javascript
+/**
+* 把内容绘制在framebuffer中，再把他们当作是texture绘制
+*/
+let texture = this.initTexture(gl, programe,img)
+gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
+gl.viewport(...this.state.viewport[3])
+this.resetGl(gl, [0.2, 0.2, 0.4, 1.0])
+this.draw1(gl, programe, texture, framebuffer, buffer)
+gl.viewport(0, 0, this.state.canvas.width, this.state.canvas.height);
+this.resetGl(gl, [0.0, 0.0, 0.0, 1.0])
+this.draw2(gl, programe, framebuffer.texture, framebuffer, buffer)
+```
+
 我们都知道，办事肯定是一次性备齐材料的好，不要来来回回跑那么多遍，而 OpenGL 就是这样子的。有人说为什么要这样而不是改成一次发送的样子？历史原因，OpenGL 盛行那会儿 GPU 的工作没那么复杂，也就不需要那么超前的设计。
 
 综上所述，WebGL 是存在 CPU 负载隐患的，是由于 OpenGL 这个状态机制决定的。
@@ -66,6 +82,107 @@ WebGPU 虽然也有一个总管家一样的对象 —— device，类型是 GPUD
 
 ![vulkan的CommandBuffer](https://pic1.zhimg.com/80/v2-791cad38fb58064cf6f251f38b4c2b18_720w.webp)
 ![Metal的CommandBuffer](https://pic2.zhimg.com/80/v2-b517268ede90bf15af8ce6a12fba0011_720w.webp)
+
+### pipeline
+
+在 WebGPU 中，一个计算过程的任务就交由“管线”完成，也就是我们在各种资料里见得到的“可编程管线”的具象化 API；在 WebGPU 中，可编程管线有两类：
+
+* 渲染管线，GPURenderPipeline
+* 计算管线，GPUComputePipeline
+
+#### renderPipeline
+
+``` javascript
+const renderPipeline = device.createRenderPipeline({
+  // --- 布局 ---
+  layout: pipelineLayout,
+  
+  // --- 五大状态用于配置渲染管线的各个阶段
+  vertex: {
+    module: device.createShaderModule({ /* 顶点着色器参数 */ }),
+    // ...
+  },
+  fragment: {
+    module: device.createShaderModule({ /* 片元着色器参数 */ }),
+    // ...
+  },
+  primitive: { /* 设置图元状态 */ },
+  depthStencil: { /* 设置深度模板状态 */ },
+  multisample: { /* 设置多重采样状态 */ }
+})
+```
+##### pipelineLayout
+
+
+### pass 通道
+
+WebGL 没有通道 API
+
+在一帧的渲染过程中，有可能需要多个通道共同完成渲染。最后一次 gl.drawXXX 的调用会使用一个绘制到目标帧缓冲的 WebGLProgram，这么说可能很抽象，不妨考虑这样一帧的渲染过程：
+
+渲染法线、漫反射信息到 FBO1 中；
+渲染光照信息到 FBO2 中；
+使用 FBO1 和 FBO2，把最后结果渲染到 Canvas 上。
+每一步都需要自己的 WebGLProgram，而且每一步都要全局切换各种 Buffer、Texture、Uniform 的绑定，这样就需要一个封装对象来完成这些状态的切换，可惜的是 WebGL 并没有这种对象，大多数时候是第三方库使用类似的类完成的。
+
+在复杂的 Web 三维开发中，一个通道还不足以将想要的一帧画面渲染完成，这个时候要切换着色器程序，再进行 drawArrays/drawElements，绘制下一个通道，这样组合多个通道的绘制结果，就能在一个 requestAnimationFrame 中完成想要的渲染。
+
+一次使用framebuffer的webgl绘制过程
+``` javascript
+/**
+* 把内容绘制在framebuffer中，再把他们当作是texture绘制
+*/
+let texture = this.initTexture(gl, programe,img)
+gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
+gl.viewport(...this.state.viewport[3])
+this.resetGl(gl, [0.2, 0.2, 0.4, 1.0])
+this.draw1(gl, programe, texture, framebuffer, buffer)
+gl.viewport(0, 0, this.state.canvas.width, this.state.canvas.height);
+this.resetGl(gl, [0.0, 0.0, 0.0, 1.0])
+this.draw2(gl, programe, framebuffer.texture, framebuffer, buffer)
+```
+将一个通道内的行为（即管线）、数据（即资源绑定组和各种缓冲对象）分别创建，独立于通道编码器之外，这样，面对不同的通道计算时，就可以按需选用不同的管线和数据，进而甚至可以实现管线或者资源的共用。
+
+
+### CommandEncoder
+编码指令缓冲的对象叫做 GPUCommandEncoder，即指令编码器，它最大的作用就是创建两种通道编码器（commandEncoder.begin[Render/Compute]Pass()），以及发出提交动作（commandEncoder.finish()），最终生成这一帧所需的所有指令。
+
+``` javascript
+// 创建指令编码器
+const commandEncoder = device.createCommandEncoder()
+​
+{
+  // 阴影通道的编码过程
+  const shadowPass = commandEncoder.beginRenderPass(shadowPassDescriptor)
+  
+  // 使用阴影渲染管线
+  shadowPass.setPipeline(shadowPipeline)
+  shadowPass.setBindGroup(0, sceneBindGroupForShadow)
+  shadowPass.setBindGroup(1, modelBindGroup)
+  shadowPass.setVertexBuffer(0, vertexBuffer)
+  shadowPass.setIndexBuffer(indexBuffer, 'uint16')
+  shadowPass.drawIndexed(indexCount)
+  shadowPass.end()
+}
+{
+  // 渲染通道常规操作
+  const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+  
+  // 使用常规渲染管线
+  renderPass.setPipeline(pipeline)
+  renderPass.setBindGroup(0, sceneBindGroupForRender)
+  renderPass.setBindGroup(1, modelBindGroup)
+  renderPass.setVertexBuffer(0, vertexBuffer)
+  renderPass.setIndexBuffer(indexBuffer, 'uint16')
+  renderPass.drawIndexed(indexCount)
+  renderPass.end()
+}
+device.queue.submit([commandEncoder.finish()]);
+```
+
+### 
+
+
 
 ### 多线程与强大的通用计算（GPGPU）能力
 WebGL 的总管家对象是 gl 变量，它必须依赖 HTML Canvas 元素，也就是说必须由主线程获取，也只能在主线程调度 GPU 状态，WebWorker 技术的多线程能力只能处理数据，比较鸡肋。
