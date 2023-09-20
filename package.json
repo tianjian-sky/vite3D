@@ -16,6 +16,8 @@
         "format": "prettier --write src/"
     },
     "dependencies": {
+        "@grapecity/spread-excelio": "^16.2.2",
+        "@grapecity/spread-sheets": "^16.2.2",
         "@types/lodash-es": "^4.17.7",
         "@vue-macros/short-vmodel": "^1.2.4",
         "@vue-macros/volar": "^0.9.5",
@@ -23,6 +25,7 @@
         "babylonjs": "^5.53.0",
         "babylonjs-loaders": "^5.53.1",
         "cross-env": "^7.0.3",
+        "exceljs": "^4.3.0",
         "lodash-es": "^4.17.21",
         "pinia": "^2.0.32",
         "postcss-plugin-px2rem": "^0.8.1",
