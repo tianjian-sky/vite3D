@@ -2,12 +2,14 @@
     <div class="about">
         <div class="toolbar">
             <input type="file" @change="loadFile" />
-            <button @click="setFilter">set a filter</button>
+            <button @click="setFilters">set filters from json</button>
+            <button @click="unfilter">unfilter</button>
             <button @click="getFilterStatus">get filter status</button>
             <button @click="getFilterResults">filter results</button>
             <button @click="toggleFilterIndicator">toggle filter indicator</button>
             <button @click="toJson">toJson</button>
-            <button @click="toJson">toJson</button>
+            <button @click="fromJson">fromJson</button>
+            <button @click="clear">clear</button>
         </div>
         <div id="sheet"></div>
     </div>
@@ -18,6 +20,8 @@ import '../../node_modules/@grapecity/spread-sheets/styles/gc.spread.sheets.css'
 import GC from '@grapecity/spread-sheets'
 import { IO } from '@grapecity/spread-excelio'
 import { onMounted, onBeforeUnmount } from 'vue'
+import { ssao2PixelShader } from 'babylonjs/Shaders/ssao2.fragment'
+import { filter } from 'lodash-es'
 
 defineOptions({
     name: 'ExcelDemo'
@@ -26,12 +30,13 @@ defineOptions({
 interface Window {
     LOADERS: any
 }
-let spread
+let workbook
 let sheetJson
+let filterJson
 const container = $ref(null)
 const loadFile = function (e) {
     console.log('loadFile', e)
-    spread = new GC.Spread.Sheets.Workbook(
+    workbook = new GC.Spread.Sheets.Workbook(
         document.getElementById('sheet'),
         { sheetCount: 1, allowAutoExtendFilterRange: true }
     )
@@ -70,20 +75,34 @@ CustomFilter.prototype.evaluate = function (evaluator, row, col) {
     }
 };
 
-function setFilter() {
+function setFilters() {
     //Set a row Filter.
-    // const spread = new GC.Spread.Sheets.Workbook(document.getElementById('sheet'))
-    const activeSheet = spread.getActiveSheet()
-    console.log('active sheet', spread, activeSheet)
-    const rowFilter = new GC.Spread.Sheets.Filter.HideRowFilter(new GC.Spread.Sheets.Range(0, 0, 7, 2))
+    // const workbook = new GC.Spread.Sheets.Workbook(document.getElementById('sheet'))
+    console.log('filterJson', filterJson)
+    if (!filterJson?.filterItemMap) return
+    const activeSheet = workbook.getActiveSheet()
+    const rowFilter = new GC.Spread.Sheets.Filter.HideRowFilter()
+    rowFilter.fromJSON(filterJson)
     activeSheet.rowFilter(rowFilter)
-    rowFilter.addFilterItem(0, new CustomFilter())
-    rowFilter.filter(0)
+    if (filterJson.filteredColumns) {
+        filterJson.filteredColumns.forEach(col => {
+            rowFilter.filter(col)
+        })
+    }
+}
+function unfilter() {
+    const rowFilter = workbook.getActiveSheet().rowFilter()
+    const range = rowFilter.extendedRange
+    for (let col = 0; col < range.colCount; col++) {
+        if (rowFilter.isFiltered(col)) {
+            rowFilter.unfilter(col)
+        }
+    }
 }
 
 function getFilterStatus() {
-    // const spread = new GC.Spread.Sheets.Workbook(document.getElementById('sheet'))
-    const rowFilter = spread.getActiveSheet().rowFilter()
+    // const workbook = new GC.Spread.Sheets.Workbook(document.getElementById('sheet'))
+    const rowFilter = workbook.getActiveSheet().rowFilter()
     const range = rowFilter.extendedRange
     const filters = {}
     for (let col = 0; col < range.colCount; col++) {
@@ -96,7 +115,7 @@ function getFilterStatus() {
 }
 
 function getFilterResults() {
-    const activeSheet = spread.getActiveSheet()
+    const activeSheet = workbook.getActiveSheet()
     const rowFilter = activeSheet.rowFilter()
     console.log(rowFilter, rowFilter.range, rowFilter.extendedRange)
     const range = rowFilter.extendedRange
@@ -120,7 +139,7 @@ function getFilterResults() {
 }
 
 function toggleFilterIndicator() {
-    const activeSheet = spread.getActiveSheet()
+    const activeSheet = workbook.getActiveSheet()
     const rowFilter = activeSheet.rowFilter()
     const range = rowFilter.extendedRange
     for (let col = 0; col < range.colCount; col++) {
@@ -131,7 +150,7 @@ function toggleFilterIndicator() {
 }
 
 function toJson() {
-    const json = spread.toJSON()
+    const json = workbook.toJSON()
     let activeSheet
     let filters = null
     for (const id in json.sheets) {
@@ -140,8 +159,34 @@ function toJson() {
             filters = activeSheet.rowFilter
         }
     }
-    console.log('json:', json)
+    console.log('json:', json, filters)
     sheetJson = json
+    filterJson = filters
+}
+function fromJson() {
+    if (sheetJson) {
+        clear()
+        if (!workbook) {
+            workbook = new GC.Spread.Sheets.Workbook(
+                document.getElementById('sheet'),
+                { sheetCount: 1, allowAutoExtendFilterRange: true }
+            )
+        } else {
+            clear()
+        }
+        const ss = GC.Spread.Sheets.findControl(document.getElementById('sheet'))
+        ss.fromJSON(sheetJson)
+        ss.focus()
+    } else {
+        console.error('无json文件')
+    }
+}
+function clear() {
+    if (workbook) {
+        workbook.clearSheets()
+        workbook.destroy()
+        workbook = null
+    }
 }
 
 onMounted(() => {
