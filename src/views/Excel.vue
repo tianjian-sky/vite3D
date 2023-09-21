@@ -20,8 +20,6 @@ import '../../node_modules/@grapecity/spread-sheets/styles/gc.spread.sheets.css'
 import GC from '@grapecity/spread-sheets'
 import { IO } from '@grapecity/spread-excelio'
 import { onMounted, onBeforeUnmount } from 'vue'
-import { ssao2PixelShader } from 'babylonjs/Shaders/ssao2.fragment'
-import { filter } from 'lodash-es'
 
 defineOptions({
     name: 'ExcelDemo'
@@ -82,6 +80,12 @@ function setFilters() {
     if (!filterJson?.filterItemMap) return
     const activeSheet = workbook.getActiveSheet()
     const rowFilter = new GC.Spread.Sheets.Filter.HideRowFilter()
+    filterJson.range = {
+        col: filterJson.range.col,
+        colCount: activeSheet.columnCount,
+        row: filterJson.range.row,
+        rowCount: activeSheet.rowCount
+    }
     rowFilter.fromJSON(filterJson)
     activeSheet.rowFilter(rowFilter)
     if (filterJson.filteredColumns) {
@@ -157,6 +161,7 @@ function toJson() {
         if (json.sheets[id].index == json.activeSheetIndex) {
             activeSheet = json.sheets[id]
             filters = activeSheet.rowFilter
+            delete filters.filteredOutRows
         }
     }
     console.log('json:', json, filters)
