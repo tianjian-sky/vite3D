@@ -2,11 +2,9 @@
     <div class="about">
         <div class="toolbar">
             <input type="file" @change="loadFile" />
-            <button @click="setFilters">set filters from json</button>
             <button @click="unfilter">unfilter</button>
-            <button @click="toggleFilterIndicator">toggle filter indicator</button>
-            <button @click="toJson">toJson</button>
-            <button @click="fromJson">fromJson</button>
+            <button @click="filter1">filter1</button>
+            <button @click="filter2">filter2</button>
             <button @click="clear">clear</button>
         </div>
         <div id="sheet"></div>
@@ -14,142 +12,167 @@
 </template>
 
 <script setup lang="ts">
-import canvasDatagrid from 'canvas-datagrid';
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import loadScript from 'load-script'
+import { onMounted } from 'vue'
+
+declare global {
+    interface Window {
+        XLSX: any;
+        x_spreadsheet: any;
+        stox: any
+    }
+}
 
 defineOptions({
     name: 'SheetJsDemo'
 })
 
-let XLSX: any = null
 let grid = null
 let workbook: any = null
-let sheetJson
-const sheetHtml = ref('')
-let filterJson
+let data
+let pluginType = 2
+
 const loadFile = function (e) {
-    sheetHtml.value = null
-    if (!XLSX) return
+    if (!window.XLSX) return
     const fr = new FileReader()
     fr.readAsArrayBuffer(e.target.files[0])
-    fr.onload = e => {
-        const workbook = XLSX.read(e.target?.result)
-        console.log('wb', workbook)
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        // const table = XLSX.utils.sheet_to_html(worksheet);
-        // sheetHtml.value = table
-        // if (!grid) {
-        //     grid = window.x_spreadsheet(document.getElementById("sheet"));
-        // }
-        // grid.loadData(window.stox(workbook))
-        // XLSX.writeFile(window.xtos(grid.getData()), "SheetJS.xlsx");
-        const data = XLSX.utils.sheet_to_json(worksheet)
-        console.error('json data', XLSX, worksheet, data)
-        const schema = [
-            { name: '起止日期', type: 'string' },
-            { name: '类型', type: 'string' },
-            { name: '功能名称', type: 'string' },
-            { name: '使用频次（次）', type: 'number' }
-        ]
-        grid = canvasDatagrid({
-            parentNode: document.getElementById("sheet"),
-            data,
-            allowColumnReordering: false,
-            schema
+    fr.onload = async e => {
+        workbook = window.XLSX.read(e.target?.result, {
+            dense: false,
+            sheetStubs: true
         })
-        console.dir(grid)
-        grid.filters.string = function (value, filterFor) {
-            console.log(value, filterFor)
-            if (!filterFor) {
-                return true
-            }
-            return value === filterFor;
-        }
+        clear()
+        data = window.stox(window.XLSX.read(e.target?.result))
+        console.log('wb', workbook, window.XLSX, data)
+        showSheet(data)
     }
 }
 
 const init = function () {
-    if (!document.getElementById('sheetJs')) {
-        const script = document.createElement('script')
-        script.setAttribute('id', 'sheetJs')
-        script.setAttribute('src', 'https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js')
-        document.body.appendChild(script)
-        const script2 = document.createElement('script')
-        script2.setAttribute('id', 'xsheet')
-        script2.setAttribute('src', 'https://unpkg.com/x-data-spreadsheet/dist/xspreadsheet.js')
-        document.body.appendChild(script2)
-        const script3 = document.createElement('script')
-        script3.setAttribute('id', 'xsheet')
-        script3.setAttribute('src', 'https://cdn.sheetjs.com/xspreadsheet/xlsxspread.js')
-        document.body.appendChild(script3)
-        const link = document.createElement('link')
-        link.setAttribute('rel', 'stylesheet')
-        link.setAttribute('href', 'https://unpkg.com/x-data-spreadsheet/dist/xspreadsheet.css')
-        document.body.appendChild(link)
-        script.onload = function () {
-            console.log(window)
-            XLSX = window.XLSX
+    if (pluginType == 2) {
+        if (!window.XLSX) {
+            const link = document.createElement('link')
+            link.setAttribute('id', 'xsheetStyle')
+            link.setAttribute('href', 'https://unpkg.com/x-data-spreadsheet/dist/xspreadsheet.css')
+            link.setAttribute('rel', 'stylesheet')
+            document.body.appendChild(link)
+            loadScript('https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js', {}, function () {
+                loadScript('https://unpkg.com/x-data-spreadsheet/dist/xspreadsheet.js', {}, function () {
+                    loadScript('https://cdn.sheetjs.com/xspreadsheet/xlsxspread.min.js', {}, function () {
+                    })
+                })
+            })
         }
-    } else {
-        XLSX = window.XLSX
     }
-    const resizeFn = function () { }
-    window.addEventListener('resize', resizeFn)
-    onBeforeUnmount(() => {
-        window.removeEventListener('resize', resizeFn)
+}
+
+const getCellValue = (row, key, ri, ci, sheet, merge) => { // TODO:
+    if (ci in row.cells) {
+        return row.cells[ci]
+    }
+}
+
+function filterFn1(row, merges) {
+    return row.cells[2].text % 2 != 0
+}
+
+function filterFn2(row, merges) {
+    const reg1 = ['构件树', '选择集', '标注', '资源库', '版本', '后期', '资产', '渲染', '帮助', '设置', '天空', '地形', '水体', '太阳光', '聚光灯', '点光源', '测量', '剖切', '标注', '分析图', '聚焦', '局部放大', '运动', '漫游', '气候', '4DBIM', '绘路', '仅显示图标', '显示设置', '视图', '相机速度', '自动旋转', '开启动态效果', '属性', '导航图', '全屏']
+    const reg2 = ['场景保存', '场景另存', '导出fbx', '分享', '右键菜单', '全选', '反选', '隐藏', '隔离', '同材质构件', '同类型构件', '还原', '重置模型', '组件', '法线']
+    const reg3 = ['新建文件夹', '合并模型组', '上传模型', '模型下载', '新建项目', '插件下载', '快捷键']
+    if (row?.cells[1]?.text == '菜单' &&
+        (row?.cells[2]?.text || '').match(new RegExp(reg1.join('|')))) {
+        return true
+    } else if (row?.cells[1].text != '菜单' && (row?.cells[2]?.text || '').match(new RegExp(reg2.join('|')))) {
+        return true
+    } else if (row?.cells[1].text != '菜单' && (row?.cells[2]?.text || '').match(new RegExp(reg3.join('|')))) {
+        return true
+    }
+}
+const unfilter = function () {
+    clear()
+    showSheet(data)
+}
+
+const filter1 = function () {
+    clear()
+    const sheet1 = data[0]
+    const filteredData = filter(sheet1, filterFn1)
+    showSheet([{
+        rows: filteredData,
+        name: sheet1.name
+    }])
+}
+
+const filter2 = function () {
+    clear()
+    const sheet1 = data[0]
+    const filteredData = filter(sheet1, filterFn2)
+    showSheet([{
+        rows: filteredData,
+        name: sheet1.name
+    }])
+}
+function filter(sheet, filterFn) {
+    const _rows = { len: 0 }
+    const merges = [].concat(sheet.merges)
+    let deleteCount = 0
+    if (!sheet.rows.len) {
+        sheet.rows.len = Object.keys(sheet.rows).filter(key => key != 'len').length
+    }
+    for (let i = 0; i < sheet.rows.len; i++) {
+        if (filterFn(sheet.rows[i], merges)) {
+            _rows[i - deleteCount] = { cells: sheet.rows[i].cells }
+            _rows.len++
+        } else {
+            let row = i - deleteCount
+            const nextRow = sheet.rows[i + 1]
+            const curRow = sheet.rows[i]
+            for (let _m = 0; _m < merges.length; _m++) {
+                const range = window.XLSX.utils.decode_range(merges[_m])
+                console.error(row, i, _m, range, merges[_m], curRow, JSON.stringify(merges))
+                if (row <= range.e.r) {
+                    if (row == range.s.r) {
+                        if (range.e.r > row) {
+                            range.e.r -= 1
+                            merges[_m] = window.XLSX.utils.encode_range(range)
+                        } else {
+                            merges.splice(_m, 1)
+                            _m--
+                        }
+                        if (nextRow) {
+                            nextRow.cells[range.s.c] = curRow.cells[range.s.c]
+                        }
+                    } else {
+                        if (range.s.r >= row) range.s.r -= 1
+                        range.e.r -= 1
+                        merges[_m] = window.XLSX.utils.encode_range(range)
+                    }
+                }
+            }
+            deleteCount++
+        }
+    }
+    merges.forEach((merge) => {
+        const xlsUtils = window.XLSX?.utils
+        const range = xlsUtils.decode_range(merge)
+        _rows[range.s.r].cells[range.s.c].merge = [range.e.r - range.s.r, 0]
     })
+    console.log(_rows, merges)
+    return _rows
 }
 
-function setFilters() {
-    grid.setFilter('功能名称', '自动旋转')
-}
-function unfilter() {
-
-}
-
-function toggleFilterIndicator() {
-
-}
-
-function toJson() {
-    // const json = workbook.toJSON()
-    // let activeSheet
-    // let filters = null
-    // for (const id in json.sheets) {
-    //     if (json.sheets[id].index == json.activeSheetIndex) {
-    //         activeSheet = json.sheets[id]
-    //         filters = activeSheet.rowFilter
-    //         delete filters.filteredOutRows
-    //     }
-    // }
-    // console.log('json:', json, filters)
-    // sheetJson = json
-    // filterJson = filters
-}
-function fromJson() {
-    // if (sheetJson) {
-    //     clear()
-    //     if (!workbook) {
-    //         workbook = new GC.Spread.Sheets.Workbook(
-    //             document.getElementById('sheet'),
-    //             { sheetCount: 1, allowAutoExtendFilterRange: true }
-    //         )
-    //     } else {
-    //         clear()
-    //     }
-    //     const ss = GC.Spread.Sheets.findControl(document.getElementById('sheet'))
-    //     ss.fromJSON(sheetJson)
-    //     ss.focus()
-    // } else {
-    //     console.error('无json文件')
-    // }
+function showSheet(data) {
+    if (pluginType == 2) {
+        window.x_spreadsheet(document.getElementById('sheet')).loadData(data)
+    }
 }
 function clear() {
     if (grid) {
         grid.data = []
-        document.getElementById("sheet").innerHTML = ''
         grid = null
     }
+    document.getElementById('sheet').innerHTML = ''
 }
 
 onMounted(() => {
