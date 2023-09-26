@@ -88,7 +88,7 @@ function filterFn2(row, merges, ri, sheet) {
     const reg2 = ['场景保存', '场景另存', '导出fbx', '分享', '右键菜单', '全选', '反选', '隐藏', '隔离', '同材质构件', '同类型构件', '还原', '重置模型', '组件', '法线']
     const reg3 = ['新建文件夹', '合并模型组', '上传模型', '模型下载', '新建项目', '插件下载', '快捷键']
     if (getCellValue(row, ri, 1, sheet, merges) == '菜单' &&
-        (row?.cells[2]?.text || '').match(new RegExp(reg1.join('|')))) {
+        (getCellValue(row, ri, 2, sheet, merges) || '').match(new RegExp(reg1.join('|')))) {
         return true
     } else if (getCellValue(row, ri, 1, sheet, merges) != '菜单' && (getCellValue(row, ri, 2, sheet, merges) || '').match(new RegExp(reg2.join('|')))) {
         return true
@@ -129,7 +129,7 @@ function filter(sheet, filterFn) {
         sheet.rows.len = Object.keys(sheet.rows).filter(key => key != 'len').length
     }
     for (let i = 0; i < sheet.rows.len; i++) {
-        if (filterFn(sheet.rows[i], merges, i, sheet)) {
+        if (i == 0 || filterFn(sheet.rows[i], merges, i, sheet)) {
             _rows[i - deleteCount] = { cells: sheet.rows[i].cells }
             _rows.len++
         } else {
@@ -166,7 +166,7 @@ function filter(sheet, filterFn) {
         const range = xlsUtils.decode_range(merge)
         _rows[range.s.r].cells[range.s.c].merge = [range.e.r - range.s.r, 0]
     })
-    console.log(_rows, merges)
+    // console.log(_rows, merges)
     return {
         rows: _rows,
         merges
