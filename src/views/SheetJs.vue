@@ -44,7 +44,7 @@ const loadFile = function (e) {
         clear()
         data = window.stox(window.XLSX.read(e.target?.result))
         console.log('wb', workbook, window.XLSX, data)
-        showSheet(data)
+        showSheet(JSON.parse(JSON.stringify(data)))
     }
 }
 
@@ -66,26 +66,34 @@ const init = function () {
     }
 }
 
-const getCellValue = (row, key, ri, ci, sheet, merge) => { // TODO:
+const getCellValue = (row, ri, ci, sheet, merges) => { // TODO:
     if (ci in row.cells) {
-        return row.cells[ci]
+        return row.cells[ci].text
+    } else {
+        for (let i = 0; i < merges.length; i++) {
+            const range = window.XLSX.utils.decode_range(merges[i])
+            if (range.s.r <= ri && range.e.r >= ri && range.s.c <= ci && range.e.c >= ci) {
+                console.error(sheet[range.s.r], range.s.r, range.s.c)
+                return sheet[range.s.r].cells[range.s.c].text
+            }
+        }
     }
 }
 
-function filterFn1(row, merges) {
+function filterFn1(row, merges, ri, sheet) {
     return row.cells[2].text % 2 != 0
 }
 
-function filterFn2(row, merges) {
+function filterFn2(row, merges, ri, sheet) {
     const reg1 = ['构件树', '选择集', '标注', '资源库', '版本', '后期', '资产', '渲染', '帮助', '设置', '天空', '地形', '水体', '太阳光', '聚光灯', '点光源', '测量', '剖切', '标注', '分析图', '聚焦', '局部放大', '运动', '漫游', '气候', '4DBIM', '绘路', '仅显示图标', '显示设置', '视图', '相机速度', '自动旋转', '开启动态效果', '属性', '导航图', '全屏']
     const reg2 = ['场景保存', '场景另存', '导出fbx', '分享', '右键菜单', '全选', '反选', '隐藏', '隔离', '同材质构件', '同类型构件', '还原', '重置模型', '组件', '法线']
     const reg3 = ['新建文件夹', '合并模型组', '上传模型', '模型下载', '新建项目', '插件下载', '快捷键']
-    if (row?.cells[1]?.text == '菜单' &&
+    if (getCellValue(row, ri, 1, sheet, merges) == '菜单' &&
         (row?.cells[2]?.text || '').match(new RegExp(reg1.join('|')))) {
         return true
-    } else if (row?.cells[1].text != '菜单' && (row?.cells[2]?.text || '').match(new RegExp(reg2.join('|')))) {
+    } else if (getCellValue(row, ri, 1, sheet, merges) != '菜单' && (getCellValue(row, ri, 2, sheet, merges) || '').match(new RegExp(reg2.join('|')))) {
         return true
-    } else if (row?.cells[1].text != '菜单' && (row?.cells[2]?.text || '').match(new RegExp(reg3.join('|')))) {
+    } else if (getCellValue(row, ri, 1, sheet, merges) != '菜单' && (getCellValue(row, ri, 2, sheet, merges) || '').match(new RegExp(reg3.join('|')))) {
         return true
     }
 }
@@ -99,7 +107,7 @@ const filter1 = function () {
     const sheet1 = data[0]
     const filteredData = filter(sheet1, filterFn1)
     showSheet([{
-        rows: filteredData,
+        ...filteredData,
         name: sheet1.name
     }])
 }
@@ -109,11 +117,12 @@ const filter2 = function () {
     const sheet1 = data[0]
     const filteredData = filter(sheet1, filterFn2)
     showSheet([{
-        rows: filteredData,
+        ...filteredData,
         name: sheet1.name
     }])
 }
 function filter(sheet, filterFn) {
+    sheet = JSON.parse(JSON.stringify(sheet))
     const _rows = { len: 0 }
     const merges = [].concat(sheet.merges)
     let deleteCount = 0
@@ -121,7 +130,7 @@ function filter(sheet, filterFn) {
         sheet.rows.len = Object.keys(sheet.rows).filter(key => key != 'len').length
     }
     for (let i = 0; i < sheet.rows.len; i++) {
-        if (filterFn(sheet.rows[i], merges)) {
+        if (filterFn(sheet.rows[i], merges, i, sheet)) {
             _rows[i - deleteCount] = { cells: sheet.rows[i].cells }
             _rows.len++
         } else {
@@ -159,7 +168,10 @@ function filter(sheet, filterFn) {
         _rows[range.s.r].cells[range.s.c].merge = [range.e.r - range.s.r, 0]
     })
     console.log(_rows, merges)
-    return _rows
+    return {
+        rows: _rows,
+        merges
+    }
 }
 
 function showSheet(data) {
