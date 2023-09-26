@@ -66,14 +66,13 @@ const init = function () {
     }
 }
 
-const getCellValue = (row, ri, ci, sheet, merges) => { // TODO:
+const getCellValue = (row, ri, ci, sheet, merges) => {
     if (ci in row.cells) {
         return row.cells[ci].text
     } else {
         for (let i = 0; i < merges.length; i++) {
             const range = window.XLSX.utils.decode_range(merges[i])
             if (range.s.r <= ri && range.e.r >= ri && range.s.c <= ci && range.e.c >= ci) {
-                console.error(sheet[range.s.r], range.s.r, range.s.c)
                 return sheet[range.s.r].cells[range.s.c].text
             }
         }
@@ -139,7 +138,7 @@ function filter(sheet, filterFn) {
             const curRow = sheet.rows[i]
             for (let _m = 0; _m < merges.length; _m++) {
                 const range = window.XLSX.utils.decode_range(merges[_m])
-                console.error(row, i, _m, range, merges[_m], curRow, JSON.stringify(merges))
+                // console.error(row, i, _m, range, merges[_m], curRow, JSON.stringify(merges))
                 if (row <= range.e.r) {
                     if (row == range.s.r) {
                         if (range.e.r > row) {
