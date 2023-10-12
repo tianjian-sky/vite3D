@@ -19,26 +19,34 @@
 <script setup lang="ts">
 import ch1_1 from '@/components/webgpu/1/1.1.vue'
 import ch1_2 from '@/components/webgpu/1/1.2.vue'
+import ch1_3 from '@/components/webgpu/1/1.3.vue'
 
 defineOptions({
     name: 'WebGpu',
     components: {
         ch1_1,
-        ch1_2
+        ch1_2,
+        ch1_3
     }
 })
 const menus = ref([
     {
         id: '1',
         title: 'chapter-1',
-        children: [{
-            id: 'ch1_1',
-            title: '1.1'
-        },
-        {
-            id: 'ch1_2',
-            title: '1.2'
-        }]
+        children: [
+            {
+                id: 'ch1_1',
+                title: '1.1'
+            },
+            {
+                id: 'ch1_2',
+                title: '1.2'
+            },
+            {
+                id: 'ch1_3',
+                title: '1.3'
+            }
+        ]
     }
 ])
 const current = ref('')
