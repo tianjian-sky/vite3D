@@ -21,6 +21,9 @@ import ch1_1 from '@/components/webgpu/1/1.1.vue'
 import ch1_2 from '@/components/webgpu/1/1.2.vue'
 import ch1_3 from '@/components/webgpu/1/1.3.vue'
 import ch1_4 from '@/components/webgpu/1/1.4.vue'
+import ch1_5 from '@/components/webgpu/1/1.5.vue'
+import ch1_6 from '@/components/webgpu/1/1.6.vue'
+import ch1_7 from '@/components/webgpu/1/1.7.vue'
 
 defineOptions({
     name: 'WebGpu',
@@ -28,7 +31,10 @@ defineOptions({
         ch1_1,
         ch1_2,
         ch1_3,
-        ch1_4
+        ch1_4,
+        ch1_5,
+        ch1_6,
+        ch1_7
     }
 })
 const menus = ref([
@@ -51,6 +57,18 @@ const menus = ref([
             {
                 id: 'ch1_4',
                 title: '1.4'
+            },
+            {
+                id: 'ch1_5',
+                title: '1.5'
+            },
+            {
+                id: 'ch1_6',
+                title: '1.6'
+            },
+            {
+                id: 'ch1_7',
+                title: '1.7'
             }
         ]
     }
