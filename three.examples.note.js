@@ -61,7 +61,7 @@ misc_boxselection.html
 import { SelectionBox } from 'three/addons/interactive/SelectionBox.js';
 import {
     FramebufferTexture,
-    Frustum, Material, ShaderMaterial,
+    Frustum, LOD, Material, MeshLambertMaterial, ShaderMaterial,
 } from 'three';
 const _frustum = new Frustum();
 if (frustum.containsPoint(_center)) {
@@ -482,6 +482,7 @@ webgl_lightprobe_cubecamera.html
 CubeCamera
 import { LightProbeHelper } from 'three/addons/helpers/LightProbeHelper.js';
 import { LightProbeGenerator } from 'three/addons/lights/LightProbeGenerator.js';
+import { text } from 'stream/consumers';
 
 webgl_lights_hemisphere.html
 HemisphereLight
@@ -675,6 +676,339 @@ webgl_loader_texture_rgbm.html
 tga
 webgl_loader_texture_tiff.html
 tiff
+
+webgl_loader_ttf.html
+text
+
+webgl_loader_vox.html
+VOXLoader, VOXMesh
+
+webgl_lod.html
+LOD
+
+webgl_marchingcubes.html
+ToonShader
+ToonShader1, ToonShader2, ToonShaderHatching, ToonShaderDotted
+各种 Material
+material.envMap
+material.metalness
+material.roughness
+material.shininess
+MarchingCubes
+水滴效果
+
+webgl_materials_alphahash.html
+composer
+pass
+TAARenderPass
+IcosahedronGeometry
+material.alphaHash
+Enables alpha hashed transparency, an alternative to.transparent or.alphaTest.The material will not be rendered if opacity is lower than a random threshold.
+
+
+    webgl_materials_blending_custom.html
+material.blending
+material.blendSrc
+material.blendDst
+material.blendEquation
+
+webgl_materials_bumpmap.html
+material.bumpMap
+
+
+webgl_materials_car.html
+RGBELoader
+scene.environment
+scene.environment = new RGBELoader().load('textures/equirectangular/venice_sunset_1k.hdr');
+OrbitControls
+controls.maxDistance
+
+
+webgl_materials_channels.html
+VelocityShader
+material.aoMap,
+    material.normalMap,
+    material.displacementMap,
+    displacementScale: SCALE,
+        displacementBias: BIAS,
+            MeshDepthMaterial
+
+
+VelocityShader
+
+webgl_materials_cubemap_dynamic.html
+material.envMap
+material.roughness
+material.metalness
+texture.mapping = THREE.EquirectangularReflectionMapping;
+scene.background = texture;
+scene.environment = texture; // Sets the environment map for all physical materials in the scene.
+
+
+webgl_materials_cubemap_mipmaps.html
+CubeTextureLoader
+customizedCubeTexture.mipmaps = mipmaps; // Array of user-specified mipmaps (optional).
+for (let level = 0; level <= maxLevel; ++level) {
+    const urls = [];
+    for (let face = 0; face < 6; ++face) {
+        urls.push(path + 'cube_m0' + level + '_c0' + face + format);
+    }
+    const mipmapLevel = level;
+    pendings.push(loadCubeTexture(urls).then(function (cubeTexture) {
+        mipmaps[mipmapLevel] = cubeTexture;
+    }));
+}
+
+// mipmap 与纹理过滤
+// https://blog.csdn.net/qq_42428486/article/details/118856697
+
+1.最近过滤，选最近的像素
+2.线性过滤 计算一个插值
+// mipmap  多级渐远纹理
+越远的物体纹理分辨率越低，过滤更准确
+
+webgl_materials_cubemap_refraction.html
+geometry.computeVertexNormals();
+// Computes vertex normals for the given vertex data.For indexed geometries, the method sets each vertex normal to be the average of the face normals of the faces that share that vertex.
+// For non - indexed geometries, vertices are not shared, and the method sets each vertex normal to be the same as the face normal.
+texture.mapping // How the image is applied to the object. 
+textureCube.mapping = THREE.CubeRefractionMapping;
+// CubeReflectionMapping and CubeRefractionMapping are for use with a CubeTexture, which is made up of six textures, one for each face of the cube
+// CubeReflectionMapping is the default for a CubeTexture.
+// Mapping Modes
+// THREE.UVMapping
+// THREE.CubeReflectionMapping 
+// THREE.CubeRefractionMapping
+// THREE.EquirectangularReflectionMapping
+// THREE.EquirectangularRefractionMapping 
+// THREE.CubeUVReflectionMapping
+
+
+webgl_materials_cubemap_render_to_mipmaps.html
+WebGLCubeRenderTarget
+着色器里配置mipmap
+// 生成mipmap
+const mesh = new THREE.Mesh(geometry, material);
+const cubeCamera = new THREE.CubeCamera(1, 10, cubeMapRenderTarget);
+const mipmapCount = Math.floor(Math.log2(Math.max(cubeMapRenderTarget.width, cubeMapRenderTarget.height)));
+for (let mipmap = 0; mipmap < mipmapCount; mipmap++) {
+    material.uniforms.mipIndex.value = mipmap;
+    material.needsUpdate = true;
+    cubeMapRenderTarget.viewport.set(0, 0, cubeMapRenderTarget.width >> mipmap, cubeMapRenderTarget.height >> mipmap);
+    cubeCamera.activeMipmapLevel = mipmap;
+    cubeCamera.update(renderer, mesh);
+}
+fragmentShader: /* glsl */ `
+    uniform samplerCube cubeTexture;
+    varying vec3 vWorldDirection;
+    uniform float mipIndex;
+    #include <common>
+    void main() {
+        vec3 cubeCoordinates = normalize(vWorldDirection);
+        // Colorize mip levels
+        vec4 color = vec4(1.0, 0.0, 0.0, 1.0);
+        if (mipIndex == 0.0) color.rgb = vec3(1.0, 1.0, 1.0);
+        else if (mipIndex == 1.0) color.rgb = vec3(0.0, 0.0, 1.0);
+        else if (mipIndex == 2.0) color.rgb = vec3(0.0, 1.0, 1.0);
+        else if (mipIndex == 3.0) color.rgb = vec3(0.0, 1.0, 0.0);
+        else if (mipIndex == 4.0) color.rgb = vec3(1.0, 1.0, 0.0);
+        gl_FragColor = textureCube(cubeTexture, cubeCoordinates, 0.0) * color;
+    }
+`
+const material = new THREE.ShaderMaterial({
+    name: 'FilterCubemap',
+    uniforms: THREE.UniformsUtils.clone(CubemapFilterShader.uniforms),
+    vertexShader: CubemapFilterShader.vertexShader,
+    fragmentShader: CubemapFilterShader.fragmentShader,
+    side: THREE.BackSide,
+    blending: THREE.NoBlending,
+});
+
+material.uniforms.cubeTexture.value = sourceCubeTexture;
+
+// 根据mipmap和当前的环境进行渲染
+const mesh = new THREE.Mesh(geometry, material);
+const cubeCamera = new THREE.CubeCamera(1, 10, cubeMapRenderTarget);
+const mipmapCount = Math.floor(Math.log2(Math.max(cubeMapRenderTarget.width, cubeMapRenderTarget.height)));
+
+for (let mipmap = 0; mipmap < mipmapCount; mipmap++) {
+    material.uniforms.mipIndex.value = mipmap;
+    material.needsUpdate = true;
+    cubeMapRenderTarget.viewport.set(0, 0, cubeMapRenderTarget.width >> mipmap, cubeMapRenderTarget.height >> mipmap);
+    cubeCamera.activeMipmapLevel = mipmap;
+    cubeCamera.update(renderer, mesh);
+}
+
+webgl_materials_cubemap.html
+CubeTextureLoader
+CubeRefractionMapping
+MeshLambertMaterial.combine // How to combine the result of the surface's color with the environment map, if any.
+MeshLambertMaterial.reflectivity
+
+webgl_materials_curvature.html
+curvature  曲率
+concave 凹
+convex 凸
+根据曲率 凹面着色 凸面着色 等高线 heatmap
+
+geometry.attributes.normal //法向量
+
+//filter the curvature array to only show concave values
+function filterConcave(curvature) {
+
+    for (let i = 0; i < curvature.length; i++) {
+
+        curvature[i] = Math.abs(clamp(curvature[i], - 1, 0));
+
+    }
+
+}
+//filter the curvature array to only show convex values
+function filterConvex(curvature) {
+
+    for (let i = 0; i < curvature.length; i++) {
+
+        curvature[i] = clamp(curvature[i], 0, 1);
+
+    }
+
+}
+<script id="vertexShaderRaw" type="x-shader/x-vertex">
+
+attribute float curvature;
+
+varying float vCurvature;
+
+void main() {
+
+    vec3 p = position;
+    vec4 modelViewPosition = modelViewMatrix * vec4( p , 1.0 );
+    gl_Position = projectionMatrix * modelViewPosition;
+    vCurvature = curvature;
+
+}
+
+</script>
+
+<script id="fragmentShaderRaw" type="x-shader/x-fragment">
+
+varying vec3 vViewPosition;
+varying float vCurvature;
+
+void main() {
+        gl_FragColor = vec4( vCurvature * 2.0, 0.0, 0.0, 1.0 );
+}
+
+</script>
+
+webgl_materials_displacementmap.html
+材质参数
+material.displacementMap
+// (置换贴图,也叫移位贴图)可以改变模型对象的几何形状,因此在提供最真实的效果的同时也会大幅增加渲染性能的开销。
+// The displacement map affects the position of the mesh's vertices. 
+// Unlike other maps which only affect the light and shade of the material the displaced vertices can cast shadows, block other objects, and otherwise act as real geometry. The displacement texture is an image where the value of each pixel (white being the highest) is mapped against, and repositions, the vertices of the mesh.
+
+
+webgl_materials_envmaps_exr.html
+EXRLoader
+EXR视差贴图模型
+PMREMGenerator
+EquirectangularReflectionMapping
+texture.mapping = THREE.EquirectangularReflectionMapping;
+new EXRLoader().load('textures/piz_compressed.exr', function (texture) {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    exrCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
+    exrBackground = texture;
+});
+
+new THREE.TextureLoader().load('textures/equirectangular.png', function (texture) {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    pngCubeRenderTarget = pmremGenerator.fromEquirectangular(texture);
+    pngBackground = texture;
+});
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
+// This class generates a Prefiltered, Mipmapped Radiance Environment Map (PMREM) from a cubeMap environment texture. 
+// This allows different levels of blur to be quickly accessed based on material roughness. 
+// Unlike a traditional mipmap chain, it only goes down to the LOD_MIN level (above), and then creates extra even more filtered 'mips' at the same LOD_MIN resolution, associated with higher roughness levels. In this way we maintain resolution
+
+webgl_materials_envmaps_groundprojected.html
+GroundProjectedSkybox
+天空盒和地形混合体
+
+webgl_materials_envmaps_hdr.html
+HDRCubeTextureLoader
+HDR envmap
+LDR envmap
+RGBM envmap
+HDR high dynamic Range
+RGBMLoader
+PMREMGenerator
+DebugEnvironment
+
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileCubemapShader();
+
+const hdrUrls = ['px.hdr', 'nx.hdr', 'py.hdr', 'ny.hdr', 'pz.hdr', 'nz.hdr'];
+hdrCubeMap = new HDRCubeTextureLoader()
+    .setPath('./textures/cube/pisaHDR/')
+    .load(hdrUrls, function () {
+        hdrCubeRenderTarget = pmremGenerator.fromCubemap(hdrCubeMap);
+        hdrCubeMap.magFilter = THREE.LinearFilter;
+        hdrCubeMap.needsUpdate = true;
+    });
+
+const ldrUrls = ['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png'];
+ldrCubeMap = new THREE.CubeTextureLoader()
+    .setPath('./textures/cube/pisa/')
+    .load(ldrUrls, function () {
+        ldrCubeRenderTarget = pmremGenerator.fromCubemap(ldrCubeMap);
+    });
+
+
+const rgbmUrls = ['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png'];
+rgbmCubeMap = new RGBMLoader().setMaxRange(16)
+    .setPath('./textures/cube/pisaRGBM16/')
+    .loadCubemap(rgbmUrls, function () {
+        rgbmCubeRenderTarget = pmremGenerator.fromCubemap(rgbmCubeMap);
+    });
+
+const envScene = new DebugEnvironment();
+generatedCubeRenderTarget = pmremGenerator.fromScene(envScene);
+
+switch (params.envMap) {
+    case 'Generated':
+        renderTarget = generatedCubeRenderTarget; // debug env
+        cubeMap = generatedCubeRenderTarget.texture;
+        break;
+    case 'LDR':
+        renderTarget = ldrCubeRenderTarget;
+        cubeMap = ldrCubeMap;
+        break;
+    case 'HDR':
+        renderTarget = hdrCubeRenderTarget;
+        cubeMap = hdrCubeMap;
+        break;
+    case 'RGBM16':
+        renderTarget = rgbmCubeRenderTarget;
+        cubeMap = rgbmCubeMap;
+        break;
+}
+
+const newEnvMap = renderTarget ? renderTarget.texture : null;
+if (newEnvMap && newEnvMap !== torusMesh.material.envMap) {
+    torusMesh.material.envMap = newEnvMap;
+    torusMesh.material.needsUpdate = true;
+    planeMesh.material.map = newEnvMap;
+    planeMesh.material.needsUpdate = true;
+}
+torusMesh.rotation.y += 0.005;
+planeMesh.visible = params.debug;
+scene.background = cubeMap;
+renderer.toneMappingExposure = params.exposure;
+renderer.render(scene, camera);
+planeMesh.material.map = newEnvMap; // 打印envMap
 
 THREE.MathUtils
 BufferGeometryUtils
