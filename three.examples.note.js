@@ -1010,6 +1010,124 @@ renderer.toneMappingExposure = params.exposure;
 renderer.render(scene, camera);
 planeMesh.material.map = newEnvMap; // 打印envMap
 
+webgl_materials_envmaps.html
+THREE.EquirectangularRefractionMapping;
+THREE.EquirectangularReflectionMapping;
+THREE.CubeRefractionMapping;
+THREE.CubeReflectionMapping;
+if (value) {
+    textureEquirec.mapping = THREE.EquirectangularRefractionMapping;
+    textureCube.mapping = THREE.CubeRefractionMapping;
+} else {
+    textureEquirec.mapping = THREE.EquirectangularReflectionMapping;
+    textureCube.mapping = THREE.CubeReflectionMapping;
+}
+
+webgl_materials_lightmap.html
+
+package: three / nodes
+import { MeshBasicNodeMaterial, vec4, color, positionLocal, mix } from 'three/nodes';
+MeshBasicNodeMaterial
+其中天空盒顶部颜色是灯光的颜色
+
+// LIGHTS
+const light = new THREE.DirectionalLight(0xd5deff);
+light.position.x = 300;
+light.position.y = 250;
+light.position.z = - 500;
+scene.add(light);
+// SKYDOME
+const topColor = new THREE.Color().copy(light.color); // 其中天空盒顶部颜色是灯光的颜色
+const bottomColor = new THREE.Color(0xffffff);
+const offset = 400;
+const exponent = 0.6;
+const h = positionLocal.add(offset).normalize().y;
+const skyMat = new MeshBasicNodeMaterial();
+skyMat.colorNode = vec4(mix(color(bottomColor), color(topColor), h.max(0.0).pow(exponent)), 1.0);
+skyMat.side = THREE.BackSide;
+const sky = new THREE.Mesh(new THREE.SphereGeometry(4000, 32, 15), skyMat);
+scene.add(sky);
+
+webgl_materials_matcap.html
+MeshMatcapMaterial
+MeshMatcapMaterial.matcap
+MeshMatcapMaterial.normalmap
+
+MatCap是Material Capture的缩写，意为“材质捕获”； 
+Matcap Shader是一种在某些层面能替代甚至超越PBR的次时代渲染方案；
+它的效率极高、计算成本极低，显示效果极佳，却能完美运行于不同的移动平台，并兼容AR、VR设备，所以极具研究与实用价值；
+用一张MatCap贴图作为渲染好的漫反射贴图
+用物体表面的法线对该贴图进行采样
+
+webgl_materials_modified.html
+动态改变shader vNormal 法向量？
+vNormal
+
+
+webgl_materials_normalmap_object_space.html
+material.normalMapType
+THREE.ObjectSpaceNormalMap;
+// Defines the type of the normal map.
+// For TangentSpaceNormalMap, the information is relative to the underlying surface.
+// For ObjectSpaceNormalMap, the information is relative to the object orientation.Default is TangentSpaceNormalMap.
+
+法线纹理与凹凸映射
+纹理另一种常见的应用就是凹凸映射（bump mapping）。凹凸映射的目的是使用一张纹理来修改模型表面的法线，以便为模型提供更多的细节。这种方法不会真的改变模型的顶点位置，只是让模型看起来好像是“凹凸不平”的，但可以从模型的轮廓处看出“破绽”。
+有两种主要的方法可以用来进行凹凸映射：一种方法是使用一张高度纹理（height map）来模拟表面位移（displacement），然后得到一个修改后的法线值，这种方法也被称为高度映射（height mapping）；另一种方法则是使用一张法线纹理（normal map）来直接存储表面法线，这种方法又被称为法线映射（normal mapping）。尽管我们常常将凹凸映射和法线映射当成是相同的技术，但读者需要知道它们之间的不同。
+
+
+什么是切线空间？
+Tangent Space，其实是一个坐标系，也就是原点 + 三个坐标轴决定的一个相对空间，我们只要搞清楚原点和三个坐标轴是什么就可以了。在Tangent Space中，坐标原点就是顶点的位置，其中z轴是该顶点本身的法线方向（N）。另外两个坐标轴就是和该点相切的两条切线。这样的切线本来有无数条，但模型一般会给定该顶点的一个tangent，这个tangent方向一般是使用和纹理坐标方向相同的那条tangent（T）。而另一个坐标轴的方向（B）就可以通过normal和tangent的叉乘得到。
+
+为什么要有切线空间
+Tangent - Space还有如下一些优点：
+自由度很高。Tangent - Space Normal Map记录的是相对法线信息，这意味着，即便把该纹理应用到一个完全不同的网格上，也可以得到一个合理的结果。
+可进行UV动画。比如，我们可以移动一个纹理的UV坐标来实现一个凹凸移动的效果，这种UV动画在水或者火山熔岩这种类型的物体会会用到。
+可以重用Normal Map。比如，一个砖块，我们可以仅使用一张Normal Map就可以用到所有的六个面上。
+可压缩。由于Tangent - Space Normal Map中法线的Z方向总是正方向的，因此我们可以仅存储XY方向，而推导得到Z方向。
+
+为什么法线贴图大部分区域都是蓝色的？
+因为法线在切线空间就是切线空间的z轴，保存到贴图的纹素中就是(0, 0, 1)，这个值对应的就是蓝色。
+因为在导出的时候我们可能需要将模型几个顶点的法线合并到一个纹素中，这个合并是通过插值运算出来的，所以大部分都是蓝色（几个顶点的法线相同，比如一个平面内就是相同的），少部分会有颜色变化。
+
+5.总体来说，使用模型空间存储法线的优点如下：
+（1）实现简单，更加直观。我们甚至不需要模型原始的法线和切线等信息，也就是说，计算更少。生成它也非常简单，而如果要生成切线空间下的法线纹理，由于模型的切线一般和UV方向相同，因此想要得到比较好的法线映射就要求纹理映射也是连续的。
+（2）在纹理坐标的缝合处和尖锐的边角部分，可见的突变（缝隙）较少，即可以提供平滑的边界。这是因为模型空间下的法线纹理存储的是同一坐标系下的法线信息，因此在边界处通过插值得到的法线可以平滑变换。而切线空间下的法线纹理中的法线信息是依靠纹理坐标的方向得到的结果，可能会在边缘处或尖锐的部分造成更多可见的缝合迹象。
+
+但使用切线空间有更多优点：
+（1）自由度很高。模型空间下的法线纹理记录的是绝对法线信息，即可用于创建它时的那个模型，而应用到其它模型上的效果就完全错误了。而切线空间下的法线纹理记录的是相对法线信息，这意味着，即便把该纹理应用到一个完全不同的网格上，也可以得到一个合理的结果。
+（2）可进行UV动画。比如，我们可以移动一个纹理的UV坐标来实现一个凹凸移动的效果，但使用模型空间下的法线纹理会得到完全错误的结果。原因同上。这种UV动画在水或火山熔岩这种类型的物体上会经常用到。
+（3）可以重用法线纹理。比如一个砖块，我们仅使用一张法线纹理就可以用到所有的六个面上，原因同上。
+（4）可压缩，由于切线空间下的法线纹理中的法线z方向总是正方向，因此我们可以仅存储XY方向，从而推导得到Z方向。而模型空间下的法线纹理由于每个方向都是可能的，因此必须存储3个方向的值，不可压缩。参考Shader小常识之——法线纹理在切线空间下的存储，假设法线向量为(x, y, z)，它可以由(x, y, 0)和(0, 0, z)两条边组成，既然法线向量是一条单位向量，这两条边构成的三角形又是直角三角形，那么其实只要知道一条边长，就可以用勾股定理计算出另一条边长。实际上法线纹理只存储了xy信息，对应shader代码：
+
+webgl_materials_normalmap.html
+MeshNormalMaterial
+FXAA
+RenderPass
+
+const renderModel = new RenderPass(scene, camera);
+const effectBleach = new ShaderPass(BleachBypassShader);
+const effectColor = new ShaderPass(ColorCorrectionShader);
+const outputPass = new OutputPass();
+effectFXAA = new ShaderPass(FXAAShader)
+
+material.map // diffuseMap 漫反射贴图 用作模型的漫反射颜色，
+material.specularMap // 高光贴图 specular map 用来表现物体对光照反应的材质。当光照到塑料，布料，金属上时，所展现出来的高光部分和高光表现是不一样的。通过高光贴图上的颜色值来表现高光的强度，值越大表示高光反射越强。
+material.normalMap // 法线贴图 保存模型各个顶点切线空间下的法线
+material.normalScale // How much the normal map affects the material. Typical ranges are 0-1. Default is a Vector2 set to (1,1).
+
+webgl_materials_physical_clearcoat.html
+ClearCoat透明涂层
+
+MeshPhysicalMaterial
+MeshPhysicalMaterial.clearcoat
+MeshPhysicalMaterial.clearcoatRoughness
+MeshPhysicalMaterial.metalness
+MeshPhysicalMaterial.roughness
+MeshPhysicalMaterial.normalMap
+MeshPhysicalMaterial.normalScale
+
+
 THREE.MathUtils
 BufferGeometryUtils
 ImprovedNoise
