@@ -1137,6 +1137,45 @@ PMREMGenerator
 // 射线检测：如何获取交点
 intersectTriangle(a, b, c, backfaceCulling, target)
 
+Matrix3().getNormalMatrix(matrix4) // Sets this matrix as the upper left 3x3 of the normal matrix of the passed matrix4. The normal matrix is the inverse transpose of the matrix m.
+Matrix3().extractBasis(xAxis, yAxis, zAxis) // Extracts the basis of this matrix into the three axis vectors provided. If this matrix is:
+
+Normal Matrix（法向量变换矩阵）= ModelView矩阵逆的转置
+https://www.cnblogs.com/DvsJ/p/16813888.html
+
+/**
+ * 
+ * 
+ * 我们都知道gl的坐标系统。它的工作是将坐标从一个坐标系转到另一个坐标系。其中我们用到了几个转换矩阵。其中最为重要的是模型（Model）、视图（View）、投影（Projection）三个矩阵。因为涉及光线光照部分的计算通常都在eye space中进行计算，所以我们需要把坐标转换到eye space中，否则基于眼睛位置的效果（比如镜面反射）就很难实现。一般通过以下代码将vertex到 eye space:
+vertexEyeSpace = gl_ModelViewMatrix * gl_Vertex;
+
+为什么我们不能对法向量（normal vector）进行同样的运算来转换到 eye space 呢？首先，法向量（normal vector）是一个三维向量，而 ModelView 是一个 44 的矩阵。其次，因为法向量代表方向，我们想要做的就是将该方向变换到 eye space 中。那么我们是否可以直接用modelView左上角的 33 矩阵来做这个变换呢？如果可以，我们只需要用下面的代码就可以完成变换：
+normalEyeSpace = vec3(gl_ModelViewMatrix * vec4(gl_Normal, 0.0));
+很遗憾，上面的变换只适用于某些情况。这也是因此我们引入了 gl_NormalMatrix 的原因。
+ * 
+ */
+
+/**
+ * T = (P2 - P1)
+    ModelView * T = ModelView * (P2 - P1) = ModelView * P2 - ModelView * P1 = P2' - P1'
+    => ModelView * T = T'
+
+    N' =  NormalMatrix * N
+    T' = ModelView * T
+
+    T' * N' = T * N = 0
+    => (NormalMatrix * N) · (ModelView * T) = 0 // 相当于两个向量点积
+    => transpose(NormalMatrix * N) * (ModelView * T)  
+    => transpose(N) * transpose(NormalMatrix) * ModelView * T = 0
+
+    N * T = 0  //因为N与T点积为0，也就是transpose(N)*T为0（点积相当于转置一个向量后乘以另外一个向量），所以上面式子中间部分为单位矩阵，因为向量乘以单位矩阵等于自身，即transpose(NormalMatrix)*ModelView=单位矩阵I
+    =>  transpose(NormalMatrix) * ModelView = I
+    => NormalMatrix = transpose((ModelView)^(-1))
+ * 
+ */
+
+
+
 
 
     ??
