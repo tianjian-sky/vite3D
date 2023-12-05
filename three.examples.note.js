@@ -1128,6 +1128,71 @@ MeshPhysicalMaterial.normalMap
 MeshPhysicalMaterial.normalScale
 
 
+webgl_materials_physical_transmission_alpha.html
+
+HDR光照
+// HDR即指高动态光照渲染，HDR是一种提高影像亮度和对比度的处理技术，与普通图像相比，HDR可以提供更多的动态范围和图像细节，利用每个曝光时间相对应最佳细节的LDR图像来合成最终HDR图像，能够更好地反映出真实环境中的视觉效果。 [1]
+// HDR是一种提高影像亮度和对比度的处理技术，该技术可以将每个暗部的细节变丰富，暗的地方更暗，丰富更多细节色彩，让电影，图片，游戏画面都能呈现出极佳的效果，使用户在观影、玩游戏时更接近真实环境中的视觉感受。传统SDR（标准动态范围）最高亮度只有100尼特，画面中高于100尼特的部分将被失真（丢失），最低调试为0.1尼特，画面中低于0.1尼特的部分将被丢失。HDR技术可使最高亮度达到数千尼特，最低亮度达到0.0005尼特，极大拓展画面中亮度高于100尼特以及低于0.1尼特部分的细节，同时让整幅画面看上去更加通透明快、细节丰富。 [1]
+// 实际上，人眼能感受的亮度范围约为10-³nit～106 nit （尼特，亮度单位），所能感受到的瞬时对比度范围可达10000∶1，而你眼前的这块屏幕，平均亮度也许在 300nit～400nit 左右，对比度可能在 2000∶1 ，可见屏幕要还原人眼所观察到的景象，还有相当漫长的一条路要走。
+// 自然界的物体显示到屏幕上，要经过拍摄 - 压缩 - 编码 - 传输 - 解码 - 显示 等一系列过程，如果最终图像能够在屏幕上完全无损还原人眼所观察到的景象，那么我们就不需要“高动态范围”这个词了，你可以认为动态范围是 100%。
+// 而相机中所谓的 HRD 拍照模式，其实是在按下快门的瞬间连拍 3 张照片，1 张过曝，一张标准曝光，一张欠曝，最后通过软件算法将 3 张照片合成 1 张，截取更多的亮部和暗部细节。
+
+// 这也是为什么使用早期的 HDR 拍照模式，手机需要一定的处理时间，因为处理器性能不够，而 iPhone X 系列手机，得益于 A11 仿生处理器的强大计算能力，已经把 HDR 功能设置为默认开启，几乎察觉不到照片合成造成的成像延迟。
+// https://zhuanlan.zhihu.com/p/264442000?utm_source=wechat_session
+RGBELoader // 是用于加载HDR光照和环境贴图的一种载入器(loader)
+gltf.scene
+各种材质参数
+material.ior // 折射系数;
+gltf.scene.traverse(function (child) {
+    if (child.isMesh && child.material.isMeshPhysicalMaterial) {
+        mesh = child;
+        material = mesh.material;
+        const color = new THREE.Color();
+        params.color = color.copy(mesh.material.color).getHex();
+        params.roughness = mesh.material.roughness;
+        params.metalness = mesh.material.metalness;
+        params.ior = mesh.material.ior;
+        params.specularIntensity = mesh.material.specularIntensity;
+        params.emissiveIntensity = mesh.material.emissiveIntensity;
+        params.transmission = mesh.material.transmission;
+        params.thickness = mesh.material.thickness;
+        params.attenuationColor = color.copy(mesh.material.attenuationColor).getHex();
+        params.attenuationDistance = mesh.material.attenuationDistance;
+    }
+});
+
+// THREE.JS中不同贴图的搭配使用
+// https://juejin.cn/post/7258159278489501755
+// THREE.CubeReflectionMapping：该映射模式将环境贴图作为一个立方体贴图，将六个面分别映射到对应的立方体面上，以模拟立方体环境映射和反射效果。
+// THREE.CubeRefractionMapping：该映射模式与 THREE.CubeReflectionMapping 类似，但是它模拟的是折射效果，即将环境贴图中的物体看作透明的，经过物体的折射后反射到表面上。
+// THREE.EquirectangularReflectionMapping：该映射模式将环境贴图作为一个全景图片，将图片映射到球体或半球体上，以模拟球形环境映射和反射效果。
+// THREE.EquirectangularRefractionMapping：该映射模式与 THREE.EquirectangularReflectionMapping 类似，但是模拟的是折射效果，即将环境贴图中的物体看作透明的，经过物体的折射后反射到表面上。
+// THREE.SphericalReflectionMapping：该映射模式将环境贴图映射到一个球形贴图上，以模拟球形环境映射和反射效果。与 THREE.EquirectangularReflectionMapping 相比，该映射模式需要使用一个球形贴图，因此对图像质量的要求较高，但可以实现更加真实的球形反射效果。
+
+webgl_materials_physical_transmission.html
+thicknessTexture
+uniforms['map'].value = imgTexture;
+uniforms['diffuse'].value = new THREE.Vector3(1.0, 0.2, 0.2);
+uniforms['shininess'].value = 500;
+uniforms['thicknessMap'].value = thicknessTexture;
+uniforms['thicknessColor'].value = new THREE.Vector3(0.5, 0.3, 0.0);
+uniforms['thicknessDistortion'].value = 0.1;
+uniforms['thicknessAmbient'].value = 0.4;
+uniforms['thicknessAttenuation'].value = 0.8; // attenuation 衰减；稀释；变薄;
+uniforms['thicknessPower'].value = 2.0;
+uniforms['thicknessScale'].value = 16.0;
+
+webgl_materials_texture_anisotropy.html
+texture.anisotropy 各向异性
+
+webgl_materials_texture_canvas.html
+THREE.CanvasTexture
+
+webgl_materials_texture_filters.html
+texture.minFilter
+texture.magFilter = THREE.NearestFilter;
+texture.minFilter = THREE.NearestFilter;
+
 THREE.MathUtils
 BufferGeometryUtils
 ImprovedNoise
@@ -1173,6 +1238,7 @@ normalEyeSpace = vec3(gl_ModelViewMatrix * vec4(gl_Normal, 0.0));
     => NormalMatrix = transpose((ModelView)^(-1))
  * 
  */
+const useUint32 = triCount > 2 ** 16;
 
 
 
