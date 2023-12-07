@@ -60,6 +60,8 @@ misc_boxselection.html
 框选
 import { SelectionBox } from 'three/addons/interactive/SelectionBox.js';
 import {
+    BufferAttribute,
+    BufferGeometry,
     FramebufferTexture,
     Frustum, LOD, Material, MeshLambertMaterial, ShaderMaterial,
 } from 'three';
@@ -1240,7 +1242,55 @@ normalEyeSpace = vec3(gl_ModelViewMatrix * vec4(gl_Normal, 0.0));
  */
 const useUint32 = triCount > 2 ** 16;
 
+BufferGeometry.drawRange
+// 1
+if (object.isInstancedMesh) {
+    renderer.renderInstances(drawStart, drawCount, object.count);
+} else if (geometry.isInstancedBufferGeometry) {
+    const maxInstanceCount = geometry._maxInstanceCount !== undefined ? geometry._maxInstanceCount : Infinity;
+    const instanceCount = Math.min(geometry.instanceCount, maxInstanceCount);
+    renderer.renderInstances(drawStart, drawCount, instanceCount);
+} else {
+    renderer.render(drawStart, drawCount);
+}
+// 2
+const start = Math.max(0, drawRange.start);
+const end = Math.min(index.count, (drawRange.start + drawRange.count));
+for (let i = start, il = end; i < il; i += 3) {
 
+    const a = index.getX(i);
+    const b = index.getX(i + 1);
+    const c = index.getX(i + 2);
+    intersection = checkGeometryIntersection(this, material, raycaster, rayLocalSpace, uv, uv1, normal, a, b, c);
+}
+BufferGeometry.groups // Split the geometry into groups, each of which will be rendered in a separate WebGL draw call. This allows an array of materials to be used with the geometry.
+// projectObject
+if (Array.isArray(material)) {
+    const groups = geometry.groups;
+    for (let i = 0, l = groups.length; i < l; i++) {
+        const group = groups[i];
+        const groupMaterial = material[group.materialIndex];
+        if (groupMaterial && groupMaterial.visible) {
+            currentRenderList.push(object, geometry, groupMaterial, groupOrder, _vector3.z, group);
+        }
+    }
+}
+// raycast
+const groups = geometry.groups;
+const drawRange = geometry.drawRange;
+if (index !== null) {
+    if (Array.isArray(material)) {
+        for (let i = 0, il = groups.length; i < il; i++) {
+            const group = groups[i];
+            const groupMaterial = material[group.materialIndex];
+            const start = Math.max(group.start, drawRange.start);
+            const end = Math.min(index.count, Math.min((group.start + group.count), (drawRange.start + drawRange.count)));
+        }
+    }
+}
+BufferAttribute.normalize
+    // normalized -- (optional) Applies to integer data only. Indicates how the underlying data in the buffer maps to the values in the GLSL code. 
+    // For instance, if array is an instance of UInt16Array, and normalized is true, the values 0 - +65535 in the array data will be mapped to 0.0f - +1.0f in the GLSL attribute. An Int16Array (signed) would map from -32768 - +32767 to -1.0f - +1.0f. If normalized is false, the values will be converted to floats unmodified, i.e. 32767 becomes 32767.0f.
 
 
 
