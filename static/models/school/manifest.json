@@ -1,0 +1,57 @@
+{
+  "uuid": "14b8ded4-5dd0-45c3-b647-642556f0ff60",
+  "thumbnailFile": "thumbnail_cim.png",
+  "version": "1.0.2",
+  "statisticInfo": {
+    "minBox": {
+      "X": -36.033423815917971,
+      "Y": -34.005463879394533,
+      "Z": -36.04999999999999
+    },
+    "maxBox": {
+      "X": 89.708877758789072,
+      "Y": 80.5570084716797,
+      "Z": 26.499999999999996
+    },
+    "totalMeshes": 9111804,
+    "totalObjects": 5583
+  },
+  "originCenter": {
+    "X": 0.0,
+    "Y": 0.0,
+    "Z": 0.0
+  },
+  "mainGltf": {
+    "gltfFile": "main.gltf",
+    "binFile": "main.bin",
+    "jsonFile": "main.json",
+    "otherFiles": [],
+    "originalDesignFile": "School-ALL-AS-centre.rvt"
+  },
+  "linkFiles": [],
+  "dxfFiles": [
+    "01 - 建筑设计说明（一）(01 - 建筑设计说明（一）--FloorPlan--1618135899356).dxf",
+    "02 - 建筑设计说明（二）(02 - 建筑设计说明（二）--FloorPlan--1618135903515).dxf",
+    "06 - 工程做法（一）(06 - 工程做法（一）--FloorPlan--1618135905533).dxf",
+    "07 - 工程做法（二）(工程做法（二）--FloorPlan--1618135908673).dxf",
+    "08 - 工程做法（三）(工程做法（三）--FloorPlan--1618135909232).dxf"
+  ],
+  "areaFiles": [
+    "School-ALL-AS-centre-areaplan_37598861381604.json",
+    "School-ALL-AS-centre-areaplan_37598891756480.json",
+    "School-ALL-AS-centre-areaplan_37598998863565.json",
+    "School-ALL-AS-centre-areaplan_37599038078675.json",
+    "School-ALL-AS-centre-areaplan_37599062323832.json",
+    "School-ALL-AS-centre-areaplan_37599087297871.json",
+    "School-ALL-AS-centre-areaplan_37599286460943.json",
+    "School-ALL-AS-centre-areaplan_37599341327213.json",
+    "School-ALL-AS-centre-areaplan_37599374368881.json",
+    "School-ALL-AS-centre-areaplan_37599406692394.json",
+    "School-ALL-AS-centre-areaplan_37599437720190.json",
+    "School-ALL-AS-centre-areaplan_37599523938534.json"
+  ],
+  "businessFilesDic": {
+    "cda": "CDA.json",
+    "dxf": "dxf.json"
+  }
+}
