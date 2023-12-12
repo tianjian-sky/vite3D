@@ -27,47 +27,42 @@ const STATE = {
 };
 
 class RoamingControls extends EventDispatcher {
-    constructor(camera, domElement, target) {
+    constructor(scene, camera, domElement, target, configs = {}) {
         super()
+        this.scene = scene
         this.target = target
         this.camera = camera
         this.domElement = domElement
         this.enabled = true
-        // Set to constrain the pitch of the camera
-        // Range is 0 to Math.PI radians
-        this.minPolarAngle = 0 // radians
-        this.maxPolarAngle = Math.PI // radians
-        this.pointerSpeed = 1.0
         this.pointers = []
-        // The four arrow keys
         this.keys = { LEFT: 'ArrowLeft', UP: 'ArrowUp', RIGHT: 'ArrowRight', BOTTOM: 'ArrowDown' }
-        // Mouse buttons
         this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: -1, RIGHT: -1 }
-        // Touch fingers
         this.touches = { ONE: TOUCH.ROTATE }
         this.state = STATE.NONE
+        this.collision = false // TODO:
         this.move = {
             forward: false,
             backward: false,
             left: false,
             right: false,
-            speed: 30,
+            speed: configs.walkSpeed || 30,
             _vector: new Vector3(),
             displacement: new Vector3(),
             prevTime: performance.now()
         }
         this.rotate = {
             start: new Vector3(),
-            delta: new Vector3(),
-            _euler: new Euler(0, 0, 0, 'YXZ')
+            delta: new Vector3()
         }
         this.jump = {
             start: false,
             startTime: null,
             enable: true,
-            groudY: 0,
-            speed: 4
+            groundY: 0,
+            speed: configs.jumpSpeed || 4
         }
+        this.setCurrentPosition(configs.position || this.camera.position)
+        this.setHeight(configs.height || 1.7)
         this.connect()
     }
 
@@ -77,6 +72,14 @@ class RoamingControls extends EventDispatcher {
         this.domElement.addEventListener('pointerup', this.onPointerUp)
         document.addEventListener('keydown', this.onKeyDown)
         document.addEventListener('keyup', this.onKeyUp)
+        document.body.click()
+        const button = document.createElement('button')
+        button.style = 'position:absolute;left: -999px;top:-999px;opacity:0;'
+        document.body.appendChild(button)
+        button.focus()
+        setTimeout(() => {
+            document.body.removeChild(button)
+        }, 1000)
     }
 
     disconnect() {
@@ -104,6 +107,11 @@ class RoamingControls extends EventDispatcher {
         this.move._vector.setFromMatrixColumn(camera.matrix, 0)
         camera.position.addScaledVector(this.move._vector, distance)
         this.target.addScaledVector(this.move._vector, distance)
+    }
+
+    moveVertical(distance) {
+        this.camera.position.y += distance
+        this.target.setY(this.target.y + distance)
     }
 
     onPointerDown = (event) => {
@@ -236,7 +244,7 @@ class RoamingControls extends EventDispatcher {
                 if (this.jump.enable === true && !this.jump.start) {
                     this.move.prevTime = performance.now()
                     this.jump.startTime = performance.now()
-                    this.jump.groudY = this.camera.position.y
+                    this.jump.groundY = this.camera.position.y
                     this.jump.start = true
                 }
                 break
@@ -286,17 +294,16 @@ class RoamingControls extends EventDispatcher {
             if (this.move.forward || this.move.backward) this.move.displacement.z -= direction.z * this.move.speed * delta
             if (this.move.left || this.move.right) this.move.displacement.x -= direction.x * this.move.speed * delta
             const newY = this.camera.position.y + this.move.displacement.y
-            if (newY <= this.jump.groudY) {
+            if (newY <= this.jump.groundY) {
                 onObject = true
             }
             if (onObject === true) {
                 this.move.displacement.y = 0
                 this.jump.start = false
             }
-            this.moveRight(- this.move.displacement.x)
-            this.moveForward(- this.move.displacement.z)
-            this.camera.position.y += this.move.displacement.y
-            this.target.setY(this.target.y + this.move.displacement.y)
+            this.moveRight(-this.move.displacement.x)
+            this.moveForward(-this.move.displacement.z)
+            this.moveVertical(this.move.displacement.y)
             if (this.rotate.delta.length() != 0) {
                 const m1 = new THREE.Matrix4().makeRotationX(-this.rotate.delta.y * Math.PI * 2 / this.domElement.offsetHeight)
                 const m2 = new THREE.Matrix4().makeRotationY(-this.rotate.delta.x * Math.PI * 2 / this.domElement.offsetWidth)
@@ -307,18 +314,26 @@ class RoamingControls extends EventDispatcher {
                 this.rotate.delta.set(0, 0, 0)
             }
             this.camera.lookAt(this.target)
-            {
-                if (!window.__target) {
-                    window.__target = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), new THREE.MeshBasicMaterial({ color: 0x00ff00 }))
-                    this.camera.parent.add(window.__target)
-                }
-                window.__target.position.set(this.target.x, this.target.y, this.target.z)
-            }
             this.dispatchEvent(_changeEvent)
         }
         this.move.prevTime = time
     }
-
+    setCurrentPosition(position) {
+        const lookVector = this.target.clone().sub(this.camera.position)
+        this.camera.position.set(position.x, this.camera.position.y, position.z)
+        this.target = this.camera.position.clone().add(lookVector)
+    }
+    setHeight(val) {
+        this.camera.position.y = val
+        this.target.setY(this.camera.position.y)
+    }
+    setWalkSpeed(val) {
+        this.move.speed = val
+    }
+    setJumpSpeed(val) {
+        this.jump.speed = val
+    }
+    // toggleCollisionDetect () {} // TODO:
 }
 
 export { RoamingControls }
