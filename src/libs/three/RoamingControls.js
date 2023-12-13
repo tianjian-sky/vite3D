@@ -7,7 +7,9 @@ import {
 } from 'three'
 import * as THREE from 'three'
 
-
+const roundFractional = function (x, n) {
+    return Math.round(x * Math.pow(10, n)) / Math.pow(10, n);
+}
 const _changeEvent = { type: 'change' }
 const GRAVITY = -9.8
 // const _PI_2 = Math.PI / 2
@@ -48,6 +50,7 @@ class RoamingControls extends EventDispatcher {
             speed: configs.walkSpeed || 30,
             _vector: new Vector3(),
             displacement: new Vector3(),
+            velocity: new Vector3(),
             prevTime: performance.now()
         }
         this.rotate = {
@@ -57,12 +60,22 @@ class RoamingControls extends EventDispatcher {
         this.jump = {
             start: false,
             startTime: null,
+            startY: null,
             enable: true,
-            groundY: 0,
+            onTheGround: false,
             speed: configs.jumpSpeed || 4
+        }
+        this.boundOffset = {
+            'x+': 0.2,
+            'x-': 0.2,
+            'y+': 0,
+            'y-': configs.height || 1.7,
+            'z+': 0.1,
+            'z-': 0.1,
         }
         this.setCurrentPosition(configs.position || this.camera.position)
         this.setHeight(configs.height || 1.7)
+        this.initBound()
         this.connect()
     }
 
@@ -92,6 +105,10 @@ class RoamingControls extends EventDispatcher {
 
     dispose() {
         this.disconnect()
+    }
+
+    initBound() {
+        this.boundOffset['y-'] = this.camera.position.y
     }
 
     moveForward(distance) {
@@ -241,11 +258,8 @@ class RoamingControls extends EventDispatcher {
                 this.move.right = true
                 break
             case 'Space':
-                if (this.jump.enable === true && !this.jump.start) {
-                    this.move.prevTime = performance.now()
-                    this.jump.startTime = performance.now()
-                    this.jump.groundY = this.camera.position.y
-                    this.jump.start = true
+                if (this.jump.enable === true && !this.jump.start && (this.collision && this.jump.onTheGround || !this.collision)) {
+                    this._handleJumpStart(this.jump.speed)
                 }
                 break
         }
@@ -275,35 +289,33 @@ class RoamingControls extends EventDispatcher {
     update() {
         const time = performance.now()
         if (this.enabled === true) {
-            // raycaster.ray.origin.copy( this.camera.position )
-            // raycaster.ray.origin.y -= 10
-            // const intersections = raycaster.intersectObjects( objects, false )
-            // const onObject = intersections.length > 0
-            let onObject = false
             const delta = (time - this.move.prevTime) / 1000
             this.move.displacement.x = 0
             this.move.displacement.y = 0
             this.move.displacement.z = 0
             if (this.jump.start) {
-                // Δs = v0(t2-t1) + .5a(t2^2-t1^2)
-                this.move.displacement.y = this.jump.speed * delta + .5 * GRAVITY * (((time - this.jump.startTime) / 1000) ** 2 - ((this.move.prevTime - this.jump.startTime) / 1000) ** 2)
+                const v0 = this.move.velocity.y
+                const v1 = v0 + GRAVITY * delta
+                this.move.displacement.y = (v0 + v1) * delta / 2
+                this.move.velocity.setY(v1)
+                if (!this.collision) {
+                    if (this.move.displacement.y + this.camera.position.y <= this.jump.startY) {
+                        this.move.displacement.y = this.jump.startY - this.camera.position.y
+                        this._handleJumpEnd()
+                    }
+                }
             }
             direction.z = Number(this.move.forward) - Number(this.move.backward)
             direction.x = Number(this.move.right) - Number(this.move.left)
             direction.normalize() // this ensures consistent movements in all directions
             if (this.move.forward || this.move.backward) this.move.displacement.z -= direction.z * this.move.speed * delta
             if (this.move.left || this.move.right) this.move.displacement.x -= direction.x * this.move.speed * delta
-            const newY = this.camera.position.y + this.move.displacement.y
-            if (newY <= this.jump.groundY) {
-                onObject = true
+            if (this.collision) {
+                this._updateDisplacementAfterCollistion(this._collistionTest())
             }
-            if (onObject === true) {
-                this.move.displacement.y = 0
-                this.jump.start = false
-            }
-            this.moveRight(-this.move.displacement.x)
-            this.moveForward(-this.move.displacement.z)
-            this.moveVertical(this.move.displacement.y)
+            if (this.move.displacement.x) this.moveRight(-this.move.displacement.x)
+            if (this.move.displacement.z) this.moveForward(-this.move.displacement.z)
+            if (this.move.displacement.y) this.moveVertical(this.move.displacement.y)
             if (this.rotate.delta.length() != 0) {
                 const m1 = new THREE.Matrix4().makeRotationX(-this.rotate.delta.y * Math.PI * 2 / this.domElement.offsetHeight)
                 const m2 = new THREE.Matrix4().makeRotationY(-this.rotate.delta.x * Math.PI * 2 / this.domElement.offsetWidth)
@@ -326,6 +338,7 @@ class RoamingControls extends EventDispatcher {
     setHeight(val) {
         this.camera.position.y = val
         this.target.setY(this.camera.position.y)
+        this.boundOffset['y-'] = this.camera.position.y
     }
     setWalkSpeed(val) {
         this.move.speed = val
@@ -333,7 +346,106 @@ class RoamingControls extends EventDispatcher {
     setJumpSpeed(val) {
         this.jump.speed = val
     }
-    // toggleCollisionDetect () {} // TODO:
+    toggleCollisionDetect(flg) {
+        this.collision = flg
+    }
+    _handleJumpStart(speed) {
+        this.jump.onTheGround = false
+        this.move.prevTime = performance.now()
+        this.jump.startTime = performance.now()
+        this.jump.start = true
+        this.jump.startY = this.camera.position.y
+        this.move.velocity.setY(speed)
+    }
+    _handleJumpEnd() {
+        this.move.velocity.y = 0
+        this.jump.start = false
+        if (this.collision) {
+            this.jump.onTheGround = true
+        }
+    }
+    _rayCast(rays, objects) {
+        const dirs = Object.keys(rays)
+        const intesects = {}
+        for (let j = 0; j < dirs.length; j++) {
+            intesects[dirs[j]] = rays[dirs[j]].intersectObjects(objects)
+        }
+        return intesects;
+    }
+    _collistionTest() {
+        const directions = {}
+        const rays = {}
+        if (this.move.displacement.x != 0) {
+            const dir = new Vector3(this.move.displacement.x > 0 ? 1 : -1, 0, 0)
+            directions[this.move.displacement.x > 0 ? 'x+' : 'x-'] = dir
+            rays[this.move.displacement.x > 0 ? 'x+' : 'x-'] = new THREE.Raycaster(this.camera.position, dir)
+        }
+        if (this.move.displacement.y != 0) {
+            const dir = new Vector3(0, this.move.displacement.y > 0 ? 1 : -1, 0)
+            directions[this.move.displacement.y > 0 ? 'y+' : 'y-'] = dir
+            rays[this.move.displacement.y > 0 ? 'y+' : 'y-'] = new THREE.Raycaster(this.camera.position, dir)
+        }
+        if (this.move.displacement.z != 0) {
+            const dir = new Vector3(0, 0, this.move.displacement.z > 0 ? 1 : -1)
+            directions[this.move.displacement.z > 0 ? 'z+' : 'z-'] = dir
+            rays[this.move.displacement.z > 0 ? 'z+' : 'z-'] = new THREE.Raycaster(this.camera.position, dir)
+        }
+        if (!rays['y-']) {
+            const dir = new Vector3(0, -1, 0)
+            directions['y-'] = dir
+            rays['y-'] = new THREE.Raycaster(this.camera.position, dir)
+        }
+        const objects = this.scene.children.filter(item => item.isModel)
+        const intersects = this._rayCast(rays, objects)
+        return intersects
+    }
+    _updateDisplacementAfterCollistion(collisions) {
+        if (this.move.displacement.x) {
+            if (this.move.displacement.x > 0 && collisions['x+']?.length) {
+                console.error('x+ collision', collisions['x+'])
+                if (roundFractional(collisions['x+'][0].distance, 5) <= this.move.displacement.x + this.boundOffset['x+']) {
+                    this.move.displacement.x = Math.min(collisions['x+'][0].distance - this.boundOffset['x+'], 0)
+                }
+            } else if (this.move.displacement.x < 0 && collisions['x-']?.length) {
+                console.error('x- collision', collisions['x-'])
+                if (roundFractional(collisions['x-'][0].distance, 5) <= -this.move.displacement.x + this.boundOffset['x-']) {
+                    this.move.displacement.x = -Math.min(collisions['x-'][0].distance - this.boundOffset['x-'], 0)
+                }
+            }
+        }
+        if (this.move.displacement.z) {
+            if (this.move.displacement.z > 0 && collisions['z+']?.length) {
+                console.error('z+ collision', collisions['z+'])
+                if (roundFractional(collisions['z+'][0].distance, 5) <= this.move.displacement.z + this.boundOffset['z+']) {
+                    this.move.displacement.z = Math.min(collisions['z+'][0].distance - this.boundOffset['z+'], 0)
+                }
+            } else if (this.move.displacement.z < 0 && collisions['z-']?.length) {
+                console.error('z- collision', collisions['z-'])
+                if (roundFractional(collisions['z-'][0].distance, 5) <= -this.move.displacement.z + this.boundOffset['z-']) {
+                    this.move.displacement.z = -Math.min(collisions['z-'][0].distance - this.boundOffset['z-'], 0)
+                }
+            }
+        }
+        if (this.move.displacement.y > 0 && collisions['y+']?.length) {
+            console.error('y+ collision', collisions['y+'])
+            if (roundFractional(collisions['y+'][0].distance, 5) <= this.move.displacement.y + this.boundOffset['y+']) {
+                this.move.displacement.y = Math.min(collisions['y+'][0].distance - this.boundOffset['y+'], 0)
+                this.move.velocity.y = 0
+            }
+        }
+        if (collisions['y-']?.length && this.move.displacement.y <= 0) {
+            console.error('y- collision', collisions['y-'][0].distance, (-this.move.displacement.y + this.boundOffset['y-']))
+            if (roundFractional(collisions['y-'][0].distance, 5) <= (-this.move.displacement.y + this.boundOffset['y-'])) {
+                this.move.displacement.y = -Math.min(collisions['y-'][0].distance - this.boundOffset['y-'], -this.move.displacement.y)
+                this._handleJumpEnd()
+            } else if (!this.jump.start) {
+                this._handleJumpStart(0)
+                this.move.velocity.setY(0)
+            }
+        } else {
+            this.jump.onTheGround = false
+        }
+    }
 }
 
 export { RoamingControls }
