@@ -63,7 +63,7 @@ const init = function () {
     function init() {
 
         // environment
-        camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1050 );
+        camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1050 );
         camera.position.z = 30;
         camera.position.x = 30;
         camera.position.y = 10;
@@ -91,6 +91,7 @@ const init = function () {
             scene.add( object.scene )
         } )
         controls = new RoamingControls( scene, camera, renderer.domElement, target );
+        controls.toggleCollisionDetect(true)
         // set up gui
         const gui = new GUI();
         const helperFolder = gui.addFolder( 'Octree Helper' );

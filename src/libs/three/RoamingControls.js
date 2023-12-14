@@ -395,7 +395,7 @@ class RoamingControls extends EventDispatcher {
             directions['y-'] = dir
             rays['y-'] = new THREE.Raycaster(this.camera.position, dir)
         }
-        const objects = this.scene.children.filter(item => item.isModel)
+        const objects = this.scene.children
         const intersects = this._rayCast(rays, objects)
         return intersects
     }
