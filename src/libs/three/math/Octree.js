@@ -102,7 +102,6 @@ class Octree {
             }
 
         }
-        console.error(this.configs.boxSize)
         for (let i = 0; i < subTrees.length; i++) {
 
             const len = subTrees[i].triangles.length;
@@ -376,20 +375,16 @@ class Octree {
     rayIntersect(ray) {
 
         if (ray.direction.length() === 0) return;
-
         const triangles = [];
         let triangle, position, distance = 1e100;
 
         this.getRayTriangles(ray, triangles);
-
         for (let i = 0; i < triangles.length; i++) {
 
             const result = ray.intersectTriangle(triangles[i].a, triangles[i].b, triangles[i].c, true, _v1);
-
             if (result) {
 
                 const newdistance = result.sub(ray.origin).length();
-
                 if (distance > newdistance) {
 
                     position = result.clone().add(ray.origin);
@@ -401,7 +396,6 @@ class Octree {
             }
 
         }
-
         return distance < 1e100 ? { distance: distance, triangle: triangle, position: position } : false;
 
     }

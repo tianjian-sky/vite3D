@@ -41,7 +41,9 @@ class RoamingControls extends EventDispatcher {
         this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: -1, RIGHT: -1 }
         this.touches = { ONE: TOUCH.ROTATE }
         this.state = STATE.NONE
-        this.collision = false // TODO:
+        this.collision = false
+        this.debug = true
+        this.octree = null
         this.move = {
             forward: false,
             backward: false,
@@ -368,7 +370,11 @@ class RoamingControls extends EventDispatcher {
         const dirs = Object.keys(rays)
         const intesects = {}
         for (let j = 0; j < dirs.length; j++) {
-            intesects[dirs[j]] = rays[dirs[j]].intersectObjects(objects)
+            if (this.octree) {
+                intesects[dirs[j]] = [this.octree.rayIntersect(rays[dirs[j]].ray)]
+            } else {
+                intesects[dirs[j]] = rays[dirs[j]].intersectObjects(objects)
+            }
         }
         return intesects;
     }
@@ -396,18 +402,20 @@ class RoamingControls extends EventDispatcher {
             rays['y-'] = new THREE.Raycaster(this.camera.position, dir)
         }
         const objects = this.scene.children
+        if (this.debug) console.time('射线检测')
         const intersects = this._rayCast(rays, objects)
+        if (this.debug) console.timeEnd('射线检测')
         return intersects
     }
     _updateDisplacementAfterCollistion(collisions) {
         if (this.move.displacement.x) {
             if (this.move.displacement.x > 0 && collisions['x+']?.length) {
-                console.error('x+ collision', collisions['x+'])
+                if (this.debug) console.error('x+ collision', collisions['x+'])
                 if (roundFractional(collisions['x+'][0].distance, 5) <= this.move.displacement.x + this.boundOffset['x+']) {
                     this.move.displacement.x = Math.min(collisions['x+'][0].distance - this.boundOffset['x+'], 0)
                 }
             } else if (this.move.displacement.x < 0 && collisions['x-']?.length) {
-                console.error('x- collision', collisions['x-'])
+                if (this.debug) console.error('x- collision', collisions['x-'])
                 if (roundFractional(collisions['x-'][0].distance, 5) <= -this.move.displacement.x + this.boundOffset['x-']) {
                     this.move.displacement.x = -Math.min(collisions['x-'][0].distance - this.boundOffset['x-'], 0)
                 }
@@ -415,26 +423,26 @@ class RoamingControls extends EventDispatcher {
         }
         if (this.move.displacement.z) {
             if (this.move.displacement.z > 0 && collisions['z+']?.length) {
-                console.error('z+ collision', collisions['z+'])
+                if (this.debug) console.error('z+ collision', collisions['z+'])
                 if (roundFractional(collisions['z+'][0].distance, 5) <= this.move.displacement.z + this.boundOffset['z+']) {
                     this.move.displacement.z = Math.min(collisions['z+'][0].distance - this.boundOffset['z+'], 0)
                 }
             } else if (this.move.displacement.z < 0 && collisions['z-']?.length) {
-                console.error('z- collision', collisions['z-'])
+                if (this.debug) console.error('z- collision', collisions['z-'])
                 if (roundFractional(collisions['z-'][0].distance, 5) <= -this.move.displacement.z + this.boundOffset['z-']) {
                     this.move.displacement.z = -Math.min(collisions['z-'][0].distance - this.boundOffset['z-'], 0)
                 }
             }
         }
         if (this.move.displacement.y > 0 && collisions['y+']?.length) {
-            console.error('y+ collision', collisions['y+'])
+            if (this.debug) console.error('y+ collision', collisions['y+'])
             if (roundFractional(collisions['y+'][0].distance, 5) <= this.move.displacement.y + this.boundOffset['y+']) {
                 this.move.displacement.y = Math.min(collisions['y+'][0].distance - this.boundOffset['y+'], 0)
                 this.move.velocity.y = 0
             }
         }
         if (collisions['y-']?.length && this.move.displacement.y <= 0) {
-            console.error('y- collision', collisions['y-'][0].distance, (-this.move.displacement.y + this.boundOffset['y-']))
+            if (this.debug) console.error('y- collision', collisions['y-'][0].distance, (-this.move.displacement.y + this.boundOffset['y-']))
             if (roundFractional(collisions['y-'][0].distance, 5) <= (-this.move.displacement.y + this.boundOffset['y-'])) {
                 this.move.displacement.y = -Math.min(collisions['y-'][0].distance - this.boundOffset['y-'], -this.move.displacement.y)
                 this._handleJumpEnd()

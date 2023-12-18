@@ -1,6 +1,7 @@
 <template>
     <div id="octree-demo-wrap">
     </div>
+    <button style="position:absolute;bottom:10px;left:10px;" @click="animate">render</button>
 </template>
 
 <script setup lang="ts">
@@ -29,7 +30,7 @@ let sphereInstance, lineSegments
 let target = new THREE.Vector3()
 let controls
 let octree = new Octree(null, {
-    boxSize: 1500
+    boxSize: 1000
 })
 let octreeHelper = null
 
@@ -86,9 +87,11 @@ const init = function () {
 
         // load the bunny
         const loader = new GLTFLoader();
+        // loader.load( '/static/models/large/0932ab4b12e140c3ac7da3104cb2a637.skp.gltf', object => {
         loader.load( '/static/models/school/main.gltf', object => {
             object.scene.rotateX(-.5 * Math.PI)
             scene.add( object.scene )
+            animate()
         } )
         controls = new RoamingControls( scene, camera, renderer.domElement, target );
         controls.toggleCollisionDetect(true)
@@ -110,36 +113,31 @@ const init = function () {
         });
         helperFolder.add(params, 'octreeEnable').name('开启八叉树').onChange(v => {
             if (v) {
+                console.time('生成八叉树')
                 octree.fromGraphNode(scene)
+                controls.octree = octree
+                console.timeEnd('生成八叉树')
             } else {
                 octree.triangles = []
                 octree.subTrees = []
             }
         })
     }
-
-    function animate() {
-
-        requestAnimationFrame( animate );
-        controls.update()
-        octreeHelper?.update()
-        render();
-        stats.update();
-
-    }
-
-    function render() {
-
-        // if ( mesh ) {
-
-        // 	mesh.rotation.y += 0.002;
-        // 	mesh.updateMatrixWorld();
-
-        // }
-
-        // updateRays();
-        renderer.render( scene, camera );
-    }
+}
+function animate() {
+    requestAnimationFrame( animate );
+    controls.update()
+    octreeHelper?.update()
+    render();
+    stats.update();
+}
+function render() {
+    // if ( mesh ) {
+    // 	mesh.rotation.y += 0.002;
+    // 	mesh.updateMatrixWorld();
+    // }
+    // updateRays();
+    renderer.render( scene, camera );
 }
 const resizeFn = function () {
     camera.aspect = window.innerWidth / window.innerHeight;
