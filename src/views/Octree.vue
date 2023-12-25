@@ -14,6 +14,7 @@ import { RoamingControls } from '../libs/three/RoamingControls.js'
 import { Octree } from '../libs/three/math/Octree.js';
 import { OctreeHelper } from '../libs/three/helpers/OctreeHelper.js';
 import { GUI } from 'lil-gui'
+import { initWasm } from '../libs/three/wasm/install.js'
 defineOptions({
   name: 'Octree'
 })
@@ -41,7 +42,7 @@ const init = function () {
     // THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
     // THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
-    
+    initWasm()
 
     // reusable variables
     const _raycaster = new THREE.Raycaster();
@@ -94,7 +95,8 @@ const init = function () {
             animate()
         } )
         controls = new RoamingControls( scene, camera, renderer.domElement, target );
-        controls.toggleCollisionDetect(true)
+        controls.toggleCollisionDetect(false)
+        // controls.toggleCollisionDetect(true)
         // set up gui
         const gui = new GUI();
         const helperFolder = gui.addFolder( 'Octree Helper' );

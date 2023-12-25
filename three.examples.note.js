@@ -1029,6 +1029,7 @@ webgl_materials_lightmap.html
 
 package: three / nodes
 import { MeshBasicNodeMaterial, vec4, color, positionLocal, mix } from 'three/nodes';
+import { Texture } from 'babylonjs';
 MeshBasicNodeMaterial
 其中天空盒顶部颜色是灯光的颜色
 
@@ -1184,6 +1185,9 @@ uniforms['thicknessAttenuation'].value = 0.8; // attenuation 衰减；稀释；�
 uniforms['thicknessPower'].value = 2.0;
 uniforms['thicknessScale'].value = 16.0;
 
+webgl_materials_subsurface_scattering.html
+SubsurfaceScatteringShader
+
 webgl_materials_texture_anisotropy.html
 texture.anisotropy 各向异性
 
@@ -1194,6 +1198,91 @@ webgl_materials_texture_filters.html
 texture.minFilter
 texture.magFilter = THREE.NearestFilter;
 texture.minFilter = THREE.NearestFilter;
+
+webgl_materials_texture_manualmipmap.html
+THREE.CanvasTexture
+THREE.CanvasTexture.mipmaps[]
+Texture.magFilter
+Texture.minFilter
+THREE.NearestFilter;
+THREE.NearestMipmapNearestFilter;
+THREE.LinearFilter;
+
+webgl_materials_texture_partialupdate.html
+/**
+ * The data argument must be an ArrayBufferView. 
+ */
+THREE.DataTexture // Creates a texture directly from raw data, width and height.
+const data = new Uint8Array(width * height * 4);
+dataTexture = new THREE.DataTexture(data, width, height);
+renderer.copyTextureToTexture(position, dataTexture, diffuseMap); // Copies all pixels of a texture to an existing texture starting from the given position. Enables access to WebGLRenderingContext.texSubImage2D.
+
+webgl_materials_texture_rotation.html
+Texture.offset
+Texture.repeat
+Texture.center
+Texture.rotation
+texture.matrix
+
+texture.matrix
+    .identity()
+    .translate(- API.centerX, - API.centerY)
+    .rotate(API.rotation)					// I don't understand how rotation can preceed scale, but it seems to be required...
+    .scale(API.repeatX, API.repeatY)
+    .translate(API.centerX, API.centerY)
+    .translate(API.offsetX, API.offsetY);
+
+webgl_materials_toon.html
+MeshToonMaterial // A material implementing toon shading.
+MeshToonMaterial.gradientMap // Gradient map for toon shading. It's required to set Texture.minFilter and Texture.magFilter to THREE.NearestFilter when using this type of texture. Default is null.
+const diffuseColor = new THREE.Color().setHSL(alpha, 0.5, gamma * 0.5 + 0.1).multiplyScalar(1 - beta * 0.2);
+
+for (let beta = 0; beta <= 1.0; beta += stepSize) {
+    for (let gamma = 0; gamma <= 1.0; gamma += stepSize) {
+        // basic monochromatic energy preservation
+        const diffuseColor = new THREE.Color().setHSL(alpha, 0.5, gamma * 0.5 + 0.1).multiplyScalar(1 - beta * 0.2);
+        const material = new THREE.MeshToonMaterial({
+            color: diffuseColor,
+            gradientMap: gradientMap
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.x = alpha * 400 - 200;
+        mesh.position.y = beta * 400 - 200;
+        mesh.position.z = gamma * 400 - 200;
+        scene.add(mesh);
+    }
+}
+
+webgl_materials_video_webcam.html
+VideoTexture
+
+video = document.getElementById('video');
+const texture = new THREE.VideoTexture(video);
+navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+    video.srcObject = stream;
+    video.play();
+})
+
+webgl_materials_video.html
+VideoTexture
+BloomPass
+
+texture = new THREE.VideoTexture(video);
+const parameters = { color: 0xffffff, map: texture };
+new THREE.MeshLambertMaterial(parameters);
+
+const renderPass = new RenderPass(scene, camera);
+const bloomPass = new BloomPass(1.3);
+const outputPass = new OutputPass();
+composer = new EffectComposer(renderer);
+composer.addPass(renderPass);
+composer.addPass(bloomPass);
+composer.addPass(outputPass);
+composer.render();
+
+webgl_materials_wireframe.html
+MeshBasicMaterial.wireframe
+WireFrame shader
 
 THREE.MathUtils
 BufferGeometryUtils
