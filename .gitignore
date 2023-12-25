@@ -28,3 +28,6 @@ coverage
 *.sw?
 .eslintrc-auto-import.json
 auto-imports.d.ts
+static
+*.out
+*.wasm.*
