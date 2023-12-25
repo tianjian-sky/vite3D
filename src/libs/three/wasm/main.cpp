@@ -5,7 +5,7 @@
 using namespace std;
 
 EM_JS(void, print_args, (float x, float y), {
-    console.log('I received: ' + x + '+ ' + y);
+    console.log('I received: ' + x + ', ' + y);
 });
 
 extern "C"
@@ -14,7 +14,7 @@ extern "C"
     {
         return a + b;
     }
-    int add_1(int *arr)
+    float add_1(float *arr)
     {
         char sBuf[15];
         // gcvt(arr[0], 12, sBuf);
@@ -26,8 +26,10 @@ extern "C"
         // gcvt(arr[1], 12, sBuf);
         // emscripten_console_logf(sBuf);
         // cout << sBuf << endl;
+        cout << arr[0] << endl;
+        cout << arr[1] << endl;
         print_args(arr[0], arr[1]);
-        return arr[1] + arr[0];
+        return arr[0] + arr[1];
     }
     float add_2(float *arr)
     {

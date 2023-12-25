@@ -19,29 +19,35 @@ export const initWasm = () => {
          * 入参 数组指针
          * 出参 数组指针
          */
-        const arr = [0, 0]
         // const add = WASM.ccall('add_2', // name of C function
         //     'number', // return type
         //     ['array'], // argument types
         //     [arr]); // arguments
         // console.error(add)
         {
+            const arr_i = [3, 5]
             // const stack = WASM.asm.stackSave()
-            // var ret = WASM.asm.stackAlloc(arr.length);
-            // WASM.HEAP8.set(arr, ret)
+            // var ret = WASM.asm.stackAlloc(arr_i.length * Int8Array.BYTES_PER_ELEMENT);
+            const ret = WASM.asm.malloc(arr_i.length * Float32Array.BYTES_PER_ELEMENT)
+            for (let i = 0; i < 2; i++) {
+                WASM.setValue(ret + Float32Array.BYTES_PER_ELEMENT * i, arr_i[i], 'float')
+            }
             // console.error('HEAP8', ret, WASM.HEAP8)
             // WASM.asm.stackRestore(stack)
-            // console.error(WASM['_add_1'].apply(null, [ret]))
-            console.warn('add', WASM.ccall('add', 'number', ['number', 'number'], [arr[0], arr[1]]))
-            console.warn('add_1', WASM.ccall('add_1', 'number', ['array'], [arr]))
+            console.error('_add_1', WASM['_add_1'].apply(null, [ret]))
         }
         {
-            const stack = WASM.asm.stackSave()
-            var ret = WASM.asm.stackAlloc(arr.length * 4);
-            WASM.HEAPF32.set(arr, ret)
+            const arr = [3.3333333, 2.22222]
+            // const stack = WASM.asm.stackSave()
+            // var ret = WASM.asm.stackAlloc(arr.length * Float32Array.BYTES_PER_ELEMENT);
+            const ret = WASM.asm.malloc(arr.length * Float32Array.BYTES_PER_ELEMENT)
+            for (let i = 0; i < 2; i++) {
+                WASM.setValue(ret + Float32Array.BYTES_PER_ELEMENT * i, arr[i], 'float')
+            }
+            // WASM.HEAPF32.set(arr, ret)
             console.error('HEAPF32', ret, WASM.HEAPF32)
-            WASM.asm.stackRestore(stack)
-            console.error(WASM['_add_2'].apply(null, [ret]))
+            // WASM.asm.stackRestore(stack)
+            console.error('_add_2', WASM['_add_2'].apply(null, [ret]))
         }
         // const pointer2 = WASM.ccall('vec3ApplyMatrix4_2', // name of C function
         //     'number', // return type
