@@ -37,38 +37,25 @@ export const initWasm = () => {
             console.error('_add_1', WASM['_add_1'].apply(null, [ret]))
         }
         {
-            const arr = [3.3333333, 2.22222]
+            const vec = new THREE.Vector3(1, 2, -3)
+            const mat4 = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 1, 1), Math.PI / 4)
+            console.warn('THREE_vec3ApplyMatrix4: ', vec.clone().applyMatrix4(mat4))
             // const stack = WASM.asm.stackSave()
             // var ret = WASM.asm.stackAlloc(arr.length * Float32Array.BYTES_PER_ELEMENT);
-            const ret = WASM.asm.malloc(arr.length * Float32Array.BYTES_PER_ELEMENT)
-            for (let i = 0; i < 2; i++) {
-                WASM.setValue(ret + Float32Array.BYTES_PER_ELEMENT * i, arr[i], 'float')
+            const pt1 = WASM.asm.malloc(3 * Float32Array.BYTES_PER_ELEMENT)
+            const pt2 = WASM.asm.malloc(mat4.elements.length * Float32Array.BYTES_PER_ELEMENT)
+            const res = []
+            WASM.setValue(pt1, vec.x, 'float')
+            WASM.setValue(pt1 + Float32Array.BYTES_PER_ELEMENT, vec.y, 'float')
+            WASM.setValue(pt1 + Float32Array.BYTES_PER_ELEMENT * 2, vec.z, 'float')
+            for (let i = 0; i < mat4.elements.length; i++) {
+                WASM.setValue(pt2 + Float32Array.BYTES_PER_ELEMENT * i, mat4.elements[i], 'float')
             }
-            // WASM.HEAPF32.set(arr, ret)
-            console.error('HEAPF32', ret, WASM.HEAPF32)
-            // WASM.asm.stackRestore(stack)
-            console.error('_add_2', WASM['_add_2'].apply(null, [ret]))
+            const resultPt = WASM['_vec3ApplyMatrix4'].apply(null, [pt1, pt2])
+            for (let i = 0; i < 3; i++) {
+                res.push(WASM.getValue(resultPt + Float32Array.BYTES_PER_ELEMENT * i, 'float'))
+            }
+            console.error('WASM_vec3ApplyMatrix4: ', resultPt, res)
         }
-        // const pointer2 = WASM.ccall('vec3ApplyMatrix4_2', // name of C function
-        //     'number', // return type
-        //     ['number', 'number', 'number', 'array'], // argument types
-        //     [10, 10, 10, new THREE.Matrix4().elements]); // arguments
-        // console.error(pointer2)
-        // const result = WASM.ccall('vec3ApplyMatrix4', // name of C function
-        //     'array', // return type
-        //     ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'], // argument types
-        //     [10, 10, 10, ...(new THREE.Matrix4().elements)]); // arguments
-        // console.error(result)
-        // const buf = new ArrayBuffer(arr.length * 8);
-        // 4         var i8 = new Uint8Array(buf);
-        // 5
-        // 6         var i64 = new Float64Array(buf);
-        // 7         arr.forEach((i, index) => {
-        //     8           i64[index] = i;
-        //     9
-        // });
-        // 10
-        // 11         return i8;
-
     }, 1000)
 }
