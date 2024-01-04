@@ -56,6 +56,29 @@ export const initWasm = () => {
                 res.push(WASM.getValue(resultPt + Float32Array.BYTES_PER_ELEMENT * i, 'float'))
             }
             console.error('WASM_vec3ApplyMatrix4: ', resultPt, res)
+            WASM.asm.free(pt1)
+            WASM.asm.free(pt2)
+        }
+        {
+            const mat1 = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 1, 1), Math.PI / 4)
+            const mat2 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(3, 4, 5), Math.PI / 3))
+            console.warn('THREE_vmat4MultiplyMat4: ', mat1.clone().multiply(mat2).elements)
+            const pt1 = WASM.asm.malloc(mat1.elements.length * Float32Array.BYTES_PER_ELEMENT)
+            const pt2 = WASM.asm.malloc(mat2.elements.length * Float32Array.BYTES_PER_ELEMENT)
+            const res = []
+            for (let i = 0; i < mat1.elements.length; i++) {
+                WASM.setValue(pt1 + Float32Array.BYTES_PER_ELEMENT * i, mat1.elements[i], 'float')
+            }
+            for (let i = 0; i < mat2.elements.length; i++) {
+                WASM.setValue(pt2 + Float32Array.BYTES_PER_ELEMENT * i, mat2.elements[i], 'float')
+            }
+            const resultPt = WASM['_mat4MultiplyMat4'].apply(null, [pt1, pt2])
+            for (let i = 0; i < 16; i++) {
+                res.push(WASM.getValue(resultPt + Float32Array.BYTES_PER_ELEMENT * i, 'float'))
+            }
+            console.error('WASM_mat4MultiplyMat4: ', resultPt, res)
+            WASM.asm.free(pt1)
+            WASM.asm.free(pt2)
         }
     }, 1000)
 }
