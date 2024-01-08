@@ -144,6 +144,74 @@ float add_2(float *arr)
 }
 ```
 
+### 关于EM_ASM 宏
+https://en.cppreference.com/w/cpp/preprocessor/replace
+https://blog.csdn.net/chengyq116/article/details/128668069
+[宏展开的可视化](https://godbolt.org/)
+
+``` c++
+// Runs the given JavaScript code on the calling thread (synchronously), and returns no value back.
+#define EM_ASM(code, ...) ((void)emscripten_asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__)))
+// Runs the given JavaScript code on the calling thread (synchronously), and returns an i32 back.
+#define EM_ASM_INT(code, ...) emscripten_asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
+// Runs the given JavaScript code on the calling thread (synchronously), and returns an pointer back.
+// On wasm32 this is the same as emscripten_asm_const_int but on wasm64 it returns an i64.
+#define EM_ASM_PTR(code, ...) emscripten_asm_const_ptr(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
+// Runs the given JavaScript code on the calling thread (synchronously), and returns a double back.
+#define EM_ASM_DOUBLE(code, ...) emscripten_asm_const_double(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
+
+#define CODE_EXPR(code) (__extension__({           \
+    __attribute__((section("em_asm"), aligned(1))) \
+    static const char x[] = code;                  \
+    x;                                             \
+}))
+
+``` c++
+#define _EM_ASM_PREP_ARGS(...) \
+    , __em_asm_sig_builder<__typeof__(__em_asm_make_type_tuple(__VA_ARGS__))>::buffer, ##__VA_ARGS__
+
+template<typename>
+struct __em_asm_sig_builder {};
+// Instead of std::tuple
+template<typename... Args>
+struct __em_asm_type_tuple {};
+
+// Instead of std::make_tuple
+template<typename... Args>
+__em_asm_type_tuple<Args...> __em_asm_make_type_tuple(Args... args) {
+    return {};
+}
+
+```
+#### std::tuple
+元组(tuple)是一种用于组合多个不同类型的值的数据结构
+[tuple](https://zhuanlan.zhihu.com/p/666443999?utm_id=0)
+
+``` c++
+std::tuple <int, double, std::string> myTuple(10, 1.23, "Hello");
+
+std::tuple<int, double, std::string> myTuple{10, 1.23, "Hello"};
+// 使用std::make_tuple()函数创建元组
+// 不需要指定各个元素数据类型
+auto myTuple = std::make_tuple(10, 1.23, "Hello");
+
+```
+
+#### _typeof__()
+_typeof__（）和 __typeof（）和  typeof（） 都是 C 的扩展，且意思是相同的，
+https://blog.csdn.net/lhl_blog/article/details/8160098
+
+
+#### gnu c __attribute__ 编译器命令
+[来了解一下GNU C __attribute__机制](https://zhuanlan.zhihu.com/p/474790212)
+
+#### c __extension__ 
+[C语言宏定义前面的 extension 是什么意思](https://docs.pingcode.com/ask/23824.html)
+__extension__是一个编译器指令，用于告诉编译器对宏进行扩展时可以使用一些不符合 ANSI 标准的语法。这个指令通常用于避免编译器产生一些不必要的警告或错误信息。
+
+#### __VA_ARGS__ 可变参数宏
+[C / C++ 可变参数的宏](https://www.jianshu.com/p/958162214e91)
+
 ## 数组类型js入参处理
 ``` javascript
 var toC = {

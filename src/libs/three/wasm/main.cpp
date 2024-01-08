@@ -1,12 +1,39 @@
 #include <iostream>
 #include <stdlib.h>
 #include <emscripten/emscripten.h>
+#include <emscripten/bind.h>
 #include <emscripten/console.h>
+
 using namespace std;
 
 EM_JS(void, print_args, (float x, float y), {
     console.log('I received: ' + x + ', ' + y);
 });
+
+float lerp(float a, float b, float t)
+{
+    return (1 - t) * a + t * b;
+}
+
+EMSCRIPTEN_BINDINGS(module)
+{
+    emscripten::function("lerp", &lerp);
+}
+
+// emscripten::value_array<float> *bindTest(emscripten::value_array<float> *a, emscripten::value_array<float> *b)
+// {
+//     emscripten::value_array<float> res;
+//     cout << a->element(emscripten::index<0>()) << ":" << b->element(emscripten::index<0>())) << endl;
+//     res.element(a->element(emscripten::index<0>()) + b->element(emscripten::index<0>()));
+//     res.element(a->element(emscripten::index<1>()) + b->element(emscripten::index<1>()));
+//     res.element(a->element(emscripten::index<2>()) + b->element(emscripten::index<2>()));
+//     return *res;
+// }
+
+// EMSCRIPTEN_BINDINGS(module)
+// {
+//     emscripten::function("bindTest", &bindTest);
+// }
 
 extern "C"
 {
@@ -31,16 +58,6 @@ extern "C"
         print_args(arr[0], arr[1]);
         return arr[0] + arr[1];
     }
-
-    // applyMatrix4( m ) {
-    //     const x = this.x, y = this.y, z = this.z;
-    //     const e = m.elements;
-    //     const w = 1 / ( e[ 3 ] * x + e[ 7 ] * y + e[ 11 ] * z + e[ 15 ] );
-    //     this.x = ( e[ 0 ] * x + e[ 4 ] * y + e[ 8 ] * z + e[ 12 ] ) * w;
-    //     this.y = ( e[ 1 ] * x + e[ 5 ] * y + e[ 9 ] * z + e[ 13 ] ) * w;
-    //     this.z = ( e[ 2 ] * x + e[ 6 ] * y + e[ 10 ] * z + e[ 14 ] ) * w;
-    //     return this;
-    // }
 
     float *vec3ApplyMatrix4(float *vec, float *arr)
     {
@@ -111,5 +128,35 @@ extern "C"
     {
         float *res = mat4MultiplyMat4(b, a);
         return res;
+    }
+
+    void runJs1()
+    {
+        emscripten_run_script("console.log('runJs1')");
+    }
+    void runJs2()
+    {
+        int x = EM_ASM_INT({
+            console.log('I received: ' + $0);
+            return $0 + 1;
+        },
+                           100);
+        printf("%d\n", x);
+    }
+
+    // c 调 js
+    void mat4MultiplyMat4CallJs()
+    {
+        EM_ASM({
+            const jsRegisters = Module.__jsRegisters; // 可以访问到Module对象
+            if (jsRegisters.__registerMat4Multiply1 && jsRegisters.__registerMat4Multiply2)
+            {
+                if (!jsRegisters.__registerMat4Multiply)
+                {
+                    jsRegisters.__registerMat4Multiply = new THREE.Matrix4()
+                }
+                jsRegisters.__registerMat4Multiply.copy(jsRegisters.__registerMat4Multiply1.multiply(jsRegisters.__registerMat4Multiply2))
+            }
+        });
     }
 }
