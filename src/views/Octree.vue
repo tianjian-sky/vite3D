@@ -14,7 +14,6 @@ import { RoamingControls } from '../libs/three/RoamingControls.js'
 import { Octree } from '../libs/three/math/Octree.js';
 import { OctreeHelper } from '../libs/three/helpers/OctreeHelper.js';
 import { GUI } from 'lil-gui'
-import { initWasm } from '../libs/three/wasm/install.js'
 defineOptions({
   name: 'Octree'
 })
@@ -41,8 +40,6 @@ const init = function () {
     // THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
     // THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
     // THREE.Mesh.prototype.raycast = acceleratedRaycast;
-
-    initWasm()
 
     // reusable variables
     const _raycaster = new THREE.Raycaster();

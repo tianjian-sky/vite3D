@@ -296,7 +296,72 @@ function createExportWrapper(name, fixedasm) {
 3. appply
 > var ret = func.apply(null, cArgs);
 
+### EMSCRIPTEN_BINDINGS
+Embind is used to bind C++ functions and classes to JavaScript, so that the compiled code can be used in a natural way by “normal” JavaScript. Embind also supports calling JavaScript classes from C++.
 
+``` c++
+
+struct PersonRecord
+{
+    std::string name;
+    int age;
+};
+
+struct ArrayInStruct
+{
+    int field[2];
+};
+
+PersonRecord findPersonAtLocation(Point2f pt)
+{
+    cout << pt.x << ":" << pt.y << endl;
+    PersonRecord res;
+    res.name = "yutianjian";
+    res.age = 37;
+    return res;
+}
+
+EMSCRIPTEN_BINDINGS(my_value_example)
+{
+    emscripten::value_array<Point2f>("Point2f")
+        .element(&Point2f::x)
+        .element(&Point2f::y);
+
+    emscripten::value_object<PersonRecord>("PersonRecord")
+        .field("name", &PersonRecord::name)
+        .field("age", &PersonRecord::age);
+
+    emscripten::value_object<ArrayInStruct>("ArrayInStruct")
+        .field("field", &ArrayInStruct::field);
+
+    // Register std::array<int, 2> because ArrayInStruct::field is interpreted as such
+    emscripten::value_array<std::array<int, 2>>("array_int_2")
+        .element(emscripten::index<0>())
+        .element(emscripten::index<1>());
+    emscripten::function("findPersonAtLocation", &findPersonAtLocation);
+}
+
+```
+``` javascript
+ var person = WASM.findPersonAtLocation([10.2, 156.5]);
+console.log('Found someone! Their name is ' + person.name + ' and they are ' + person.age + ' years old');
+```
+
+#### allow_raw_pointers
+Because raw pointers have unclear lifetime semantics, embind requires their use to be marked with allow_raw_pointers.
+
+``` javascript
+class C {};
+C* passThrough(C* ptr) { return ptr; }
+EMSCRIPTEN_BINDINGS(raw_pointers) {
+    class_<C>("C");
+    function("passThrough", &passThrough, allow_raw_pointers());
+}
+```
+
+#### value_array, value_object
+Value arrays are converted to and from JavaScript Arrays
+value objects are converted to and from JavaScript Objects.
 
 
 ##  --closure 1
