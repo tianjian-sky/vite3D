@@ -57,14 +57,14 @@ const router = createRouter({
             // which is lazy-loaded when the route is visited.
             component: () => import('../views/LuckySheet.vue')
         },
-        // {
-        //     path: '/bvh',
-        //     name: 'bvh',
-        //     // route level code-splitting
-        //     // this generates a separate chunk (About.[hash].js) for this route
-        //     // which is lazy-loaded when the route is visited.
-        //     component: () => import('../views/Bvh.vue')
-        // },
+        {
+            path: '/bvh',
+            name: 'bvh',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/Bvh.vue')
+        },
         {
             path: '/octree',
             name: 'octree',
@@ -72,7 +72,15 @@ const router = createRouter({
             // this generates a separate chunk (About.[hash].js) for this route
             // which is lazy-loaded when the route is visited.
             component: () => import('../views/Octree.vue')
-        }
+        },
+        {
+            path: '/wasmBenchmark',
+            name: 'WasmBenchMark',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/WasmBenchmark.vue')
+        },
     ]
 })
 
