@@ -136,6 +136,7 @@ const init = function () {
 }
 
 const test = () => {
+    document.getElementById('result').innerHTML = ''
     testCases.forEach((item, index) => {
         durations.push(0)
         wasmDurations.push(0)
