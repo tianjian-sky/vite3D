@@ -51,6 +51,7 @@ export default defineConfig((vite) => {
         ],
         resolve: {
             alias: {
+                '_three': './node_modules/three/build/three.module.js',
                 '@': fileURLToPath(new URL('./src', import.meta.url))
             }
         },

@@ -25,32 +25,48 @@ defineOptions({
   name: 'WasmBenchMark'
 })
 
-const loops = ref(10000)
-const mat1 = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 2, 3), Math.PI / 4)
-const mat2 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 2, 5), Math.PI / 3))
+const loops = ref(1000)
+
+const durations = []
+const wasmDurations = []
+
+
+let mat1 = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 2, 3), Math.PI / 4)
+let mat2 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 2, 5), Math.PI / 3))
 /*
 *
  * js call c
  */
+let pt1_1
+let pt2_1
+
+const prepareMat = (index, useWasm) => {
+    const t = performance.now()
+    mat1 = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(Math.random(), Math.random(), Math.random()), Math.PI * Math.random())
+    mat2 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(Math.random(), Math.random(), Math.random()), Math.PI * Math.random() / 2))
+    if (useWasm) {
+        window._WASM.asm.free(pt1_1)
+        window._WASM.asm.free(pt2_1)
+        pt1_1 = window._WASM.asm.malloc(16 * Float32Array.BYTES_PER_ELEMENT)
+        pt2_1 = window._WASM.asm.malloc(16 * Float32Array.BYTES_PER_ELEMENT)
+        for (let i = 0; i < mat1.elements.length; i++) {
+            window._WASM.setValue(pt1_1 + Float32Array.BYTES_PER_ELEMENT * i, mat1.elements[i], 'float')
+            window._WASM.setValue(pt2_1 + Float32Array.BYTES_PER_ELEMENT * i, mat2.elements[i], 'float')
+        }
+        wasmDurations[index] = wasmDurations[index] - (performance.now() - t)
+    } else {
+        durations[index] = durations[index]- (performance.now() - t)
+    }
+}
+
 const case3 = (wasm = false) => {
     let result
     if (wasm) {
-        result = new THREE.Matrix4()
-        const pt1 = window._WASM.asm.malloc(16 * Float32Array.BYTES_PER_ELEMENT)
-        const pt2 = window._WASM.asm.malloc(16 * Float32Array.BYTES_PER_ELEMENT)
-        const res = []
-        for (let i = 0; i < mat1.elements.length; i++) {
-            window._WASM.setValue(pt1 + Float32Array.BYTES_PER_ELEMENT * i, mat1.elements[i], 'float')
-            window._WASM.setValue(pt2 + Float32Array.BYTES_PER_ELEMENT * i, mat2.elements[i], 'float')
-        }
-        const resultPt = window._WASM['_mat4MultiplyMat4'].apply(null, [pt1, pt2])
-        for (let i = 0; i < 16; i++) {
-            result.elements[i] = window._WASM.getValue(resultPt + Float32Array.BYTES_PER_ELEMENT * i, 'float')
-        }
-        window._WASM.asm.free(pt1)
-        window._WASM.asm.free(pt2)
+        window._WASM['_mat4MultiplyMat4'].apply(null, [pt1_1, pt2_1])
+        // window._WASM.asm.free(pt1_1)
+        // window._WASM.asm.free(pt2_1)
     } else {
-        result = mat1.clone().multiply(mat2)
+        mat1.clone().multiply(mat2)
     }
     return result
 }
@@ -64,20 +80,16 @@ const case4 = (wasm) => { //  using em_bind()
         window._WASM.__jsRegisters.__registerMat4Multiply1 = mat1
         window._WASM.__jsRegisters.__registerMat4Multiply2 = mat2
         window._WASM['_mat4MultiplyMat4CallJs'].apply(null, [])
-        return window._WASM.__jsRegisters.__registerMat4Multiply.clone()
     } else {
-        return mat1.clone().multiply(mat2)
+        mat1.clone().multiply(mat2)
     }
 }
 
 const case7 = (wasm) => { // using em_bind() with value_array, value_object (array and object auto-convert)
     if (wasm) {
-        const res = new THREE.Matrix4()
-        const arr = window._WASM.mat4MultiplyMat4_2.call(null, mat1.elements.concat(mat2.elements))
-        res.elements = arr
-        return res
+        window._WASM.mat4MultiplyMat4_2.call(null, mat1.elements.concat(mat2.elements))
     } else {
-        return mat1.clone().multiply(mat2)
+        mat1.clone().multiply(mat2)
     }
 }
 
@@ -124,19 +136,21 @@ const init = function () {
 }
 
 const test = () => {
-    const durations = []
-    const wasmDurations = []
     testCases.forEach((item, index) => {
-        durations.push(new Date().getTime())
+        durations.push(0)
+        wasmDurations.push(0)
+        let t = performance.now()
         for (let i = 0; i < loops.value; i++) {
+            prepareMat(index, false)
             item.fn()
         }
-        durations[index] = new Date().getTime() - durations[index]
-        wasmDurations.push(new Date().getTime())
+        durations[index] += performance.now() - t
+        t = performance.now()
         for (let i = 0; i < loops.value; i++) {
+            prepareMat(index, true)
             item.fn(true)
         }
-        wasmDurations[index] = new Date().getTime() - wasmDurations[index]
+        wasmDurations[index] += performance.now() - t
         document.getElementById('result').innerHTML = document.getElementById('result').innerHTML + `<p>${item.id}:</p><p>${item.id}:${item.desc}</p><p>循环次数：${loops.value}</p><p>js用时：${durations[index]}ms</p><p>wasm用时：${wasmDurations[index]}ms</p>`
     })
 }

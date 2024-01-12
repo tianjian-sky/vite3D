@@ -414,7 +414,7 @@ extern "C"
             const jsRegisters = Module.__jsRegisters; // 可以访问到Module对象
             if (jsRegisters.__registerMat4Multiply1 && jsRegisters.__registerMat4Multiply2)
             {
-                jsRegisters.__registerMat4Multiply.copy(jsRegisters.__registerMat4Multiply1.multiply(jsRegisters.__registerMat4Multiply2))
+                jsRegisters.__registerMat4Multiply1.multiplyMatrices(jsRegisters.__registerMat4Multiply1, jsRegisters.__registerMat4Multiply2)
             }
         });
     }
