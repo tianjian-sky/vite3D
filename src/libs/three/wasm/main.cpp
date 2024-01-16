@@ -4,6 +4,7 @@
 #include <emscripten/emscripten.h>
 #include <emscripten/bind.h>
 #include <emscripten/console.h>
+#include <emscripten/val.h>
 
 using namespace std;
 
@@ -189,7 +190,7 @@ std::array<float, 16> &mat4MultiplyMat4_2(Matrix4f4f &mat)
     return res;
 }
 
-std::array<float, 16> &mat4MultiplyMat4_3(FloatPointers2 mats)
+void mat4MultiplyMat4_3(FloatPointers2 mats)
 {
     std::array<float, 16> res;
     float *mat1 = mats.p0;
@@ -199,7 +200,6 @@ std::array<float, 16> &mat4MultiplyMat4_3(FloatPointers2 mats)
     cout << mats.p0 << ":" << mats.p1 << endl;
     // mat1 = mats.p0;
     // mat2 = mats.p1;
-    // cout << mats.p0 << ":" << mats.p1 << endl;
     const float a11 = mat1[0];
     const float a12 = mat1[4];
     const float a13 = mat1[8];
@@ -248,7 +248,7 @@ std::array<float, 16> &mat4MultiplyMat4_3(FloatPointers2 mats)
     res[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
     res[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
     res[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
-    return res;
+    // return res;
 }
 
 /**
@@ -314,6 +314,18 @@ EMSCRIPTEN_BINDINGS(mat4)
     emscripten::function("mat4MultiplyMat4_2", &mat4MultiplyMat4_2);
     // emscripten::function("mat4MultiplyMat4_3", &mat4MultiplyMat4_3, emscripten::allow_raw_pointers());
 }
+
+// static void embind_init_mat4();
+// static struct EmBindInit_mat4 : emscripten::internal::InitFunc
+// {
+//     EmBindInit_mat4() : InitFunc(embind_init_mat4) {}
+// } EmBindInit_mat4_instance;
+// static void embind_init_mat4()
+// {
+//     emscripten::value_array<Matrix4f4f>("Matrix4f4f").element(&Matrix4f4f::a0);
+//     emscripten::value_array<std::array<float, 16>>("ArrayMat4").element(emscripten::index<0>());
+//     emscripten::function("mat4MultiplyMat4_2", &mat4MultiplyMat4_2);
+// }
 
 // EMSCRIPTEN_BINDINGS(mat4V2)
 // {
@@ -414,8 +426,177 @@ extern "C"
             const jsRegisters = Module.__jsRegisters; // 可以访问到Module对象
             if (jsRegisters.__registerMat4Multiply1 && jsRegisters.__registerMat4Multiply2)
             {
-                jsRegisters.__registerMat4Multiply1.multiplyMatrices(jsRegisters.__registerMat4Multiply1, jsRegisters.__registerMat4Multiply2)
+                if (jsRegisters.__registerMat4Multiply.multiplyMatricesFn)
+                {
+                    jsRegisters.__registerMat4Multiply.multiplyMatricesFn(jsRegisters.__registerMat4Multiply1, jsRegisters.__registerMat4Multiply2)
+                }
+                else
+                {
+                    jsRegisters.__registerMat4Multiply.multiplyMatrices(jsRegisters.__registerMat4Multiply1, jsRegisters.__registerMat4Multiply2)
+                }
             }
         });
     }
+
+    void vec3MultiplyMat4CallJs()
+    {
+        EM_ASM({
+            const jsRegisters = Module.__jsRegisters; // 可以访问到Module对象
+            if (jsRegisters.__vec3_1 && jsRegisters.applyMatrix4)
+            {
+                if (jsRegisters.__vec3_1.applyMatrix4Fn)
+                {
+                    jsRegisters.__vec3_1.applyMatrix4Fn(jsRegisters.__registerMat4Multiply1)
+                }
+                else
+                {
+                    jsRegisters.__vec3_1.applyMatrix4(jsRegisters.__registerMat4Multiply1)
+                }
+            }
+        });
+    }
+
+    // share buffer
+    void vec3MultiplyMat4(float *vec3, float *mat4)
+    {
+        const float x = vec3[0], y = vec3[1], z = vec3[2];
+        // cout << "a:" << vec3[0] << ":" << vec3[1] << ":" << vec3[2] << endl;
+        // cout << "b:" << mat4[0] << ":" << mat4[1] << ":" << mat4[2] << mat4[3] << ":" << mat4[4] << ":" << mat4[5] << mat4[6] << ":" << mat4[7] << ":" << mat4[8] << endl;
+        const float w = 1 / (mat4[3] * x + mat4[7] * y + mat4[11] * z + mat4[15]);
+        vec3[0] = (mat4[0] * x + mat4[4] * y + mat4[8] * z + mat4[12]) * w;
+        vec3[1] = (mat4[1] * x + mat4[5] * y + mat4[9] * z + mat4[13]) * w;
+        vec3[2] = (mat4[2] * x + mat4[6] * y + mat4[10] * z + mat4[14]) * w;
+        // cout << "o:" << vec3[0] << ":" << vec3[1] << ":" << vec3[2] << endl;
+    }
+
+    void mat4MultiplyMat4ReturnVoid(float *a, float *b, float *res)
+    {
+        const float a11 = a[0];
+        const float a12 = a[4];
+        const float a13 = a[8];
+        const float a14 = a[12];
+        const float a21 = a[1];
+        const float a22 = a[5];
+        const float a23 = a[9];
+        const float a24 = a[13];
+        const float a31 = a[2];
+        const float a32 = a[6];
+        const float a33 = a[10];
+        const float a34 = a[14];
+        const float a41 = a[3];
+        const float a42 = a[7];
+        const float a43 = a[11];
+        const float a44 = a[15];
+        const float b11 = b[0];
+        const float b12 = b[4];
+        const float b13 = b[8];
+        const float b14 = b[12];
+        const float b21 = b[1];
+        const float b22 = b[5];
+        const float b23 = b[9];
+        const float b24 = b[13];
+        const float b31 = b[2];
+        const float b32 = b[6];
+        const float b33 = b[10];
+        const float b34 = b[14];
+        const float b41 = b[3];
+        const float b42 = b[7];
+        const float b43 = b[11];
+        const float b44 = b[15];
+        res[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
+        res[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
+        res[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
+        res[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
+        res[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
+        res[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
+        res[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
+        res[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
+        res[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
+        res[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
+        res[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
+        res[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
+        res[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
+        res[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
+        res[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
+        res[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
+    }
+}
+
+// static unsigned char data[] = {0, 1, 2, 3, 4, 5, 6, 7};
+// size_t bufferLength = 15;
+
+// emscripten::val getBytes()
+// {
+//     return emscripten::val(emscripten::typed_memory_view<char>(bufferLength, data));
+// }
+
+// EMSCRIPTEN_BINDINGS(memory_view_example)
+// {
+//     emscripten::function("getBytes", &getBytes);
+// }
+
+/**
+ * em_bind 使用val() 读取js变量
+ */
+
+std::vector<float> mat4MultiplyMat4CallByVal()
+{
+    const std::vector<float> &a = emscripten::convertJSArrayToNumberVector<float>(emscripten::val::global("__registerMat4Multiply1"));
+    const std::vector<float> &b = emscripten::convertJSArrayToNumberVector<float>(emscripten::val::global("__registerMat4Multiply2"));
+    const std::vector<float> &res = emscripten::convertJSArrayToNumberVector<float>(emscripten::val::global("__registerMat4Multiply"));
+    cout << a.size() << ": " << b.size() << ":" << res.size() << endl;
+    const float a11 = a[0];
+    const float a12 = a[4];
+    const float a13 = a[8];
+    const float a14 = a[12];
+    const float a21 = a[1];
+    const float a22 = a[5];
+    const float a23 = a[9];
+    const float a24 = a[13];
+    const float a31 = a[2];
+    const float a32 = a[6];
+    const float a33 = a[10];
+    const float a34 = a[14];
+    const float a41 = a[3];
+    const float a42 = a[7];
+    const float a43 = a[11];
+    const float a44 = a[15];
+    const float b11 = b[0];
+    const float b12 = b[4];
+    const float b13 = b[8];
+    const float b14 = b[12];
+    const float b21 = b[1];
+    const float b22 = b[5];
+    const float b23 = b[9];
+    const float b24 = b[13];
+    const float b31 = b[2];
+    const float b32 = b[6];
+    const float b33 = b[10];
+    const float b34 = b[14];
+    const float b41 = b[3];
+    const float b42 = b[7];
+    const float b43 = b[11];
+    const float b44 = b[15];
+    // res[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
+    // res[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
+    // res[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
+    // res[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
+    // res[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
+    // res[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
+    // res[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
+    // res[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
+    // res[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
+    // res[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
+    // res[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
+    // res[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
+    // res[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
+    // res[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
+    // res[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
+    // res[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
+    return res;
+}
+
+EMSCRIPTEN_BINDINGS(test_bindings)
+{
+    emscripten::function("mat4MultiplyMat4CallByVal", &mat4MultiplyMat4CallByVal, emscripten::allow_raw_pointers());
 }

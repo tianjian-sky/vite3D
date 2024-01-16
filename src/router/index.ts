@@ -81,6 +81,22 @@ const router = createRouter({
             // which is lazy-loaded when the route is visited.
             component: () => import('../views/WasmBenchmark.vue')
         },
+        {
+            path: '/wasmTest',
+            name: 'WasmTest',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/WasmTest.vue')
+        },
+        {
+            path: '/wasmCompare',
+            name: 'WasmCompare',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/WasmCompare.vue')
+        }
     ]
 })
 

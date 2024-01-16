@@ -373,3 +373,13 @@ value objects are converted to and from JavaScript Objects.
 
 ## --extern-pre-js ----extern-post-js
 Specify a file whose contents are prepended to the JavaScript output. This file is prepended to the final JavaScript output, after all other work has been done, including optimization, optional MODULARIZE-ation, instrumentation like SAFE_HEAP, etc. 
+
+
+
+### assemblyScript 
+Its similarity with TypeScript makes it easy to compile to WebAssembly without learning a new language.
+
+https://github.com/AssemblyScript/assemblyscript/tree/main/std/assembly/rt
+https://www.assemblyscript.org/compiler.html#compiler-options
+https://www.assemblyscript.org/stdlib/globals.html
+

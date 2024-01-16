@@ -27,8 +27,8 @@ defineOptions({
 
 const loops = ref(1000)
 
-const durations = []
-const wasmDurations = []
+let durations = []
+let wasmDurations = []
 
 
 let mat1 = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 2, 3), Math.PI / 4)
@@ -44,11 +44,12 @@ const prepareMat = (index, useWasm) => {
     const t = performance.now()
     mat1 = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(Math.random(), Math.random(), Math.random()), Math.PI * Math.random())
     mat2 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(Math.random(), Math.random(), Math.random()), Math.PI * Math.random() / 2))
+    if (!window._WASM.__jsRegisters.__registerMat4Multiply) window._WASM.__jsRegisters.__registerMat4Multiply = new THREE.Matrix4()
+    window._WASM.__jsRegisters.__registerMat4Multiply1 = mat1
+    window._WASM.__jsRegisters.__registerMat4Multiply2 = mat2
     if (useWasm) {
-        window._WASM.asm.free(pt1_1)
-        window._WASM.asm.free(pt2_1)
-        pt1_1 = window._WASM.asm.malloc(16 * Float32Array.BYTES_PER_ELEMENT)
-        pt2_1 = window._WASM.asm.malloc(16 * Float32Array.BYTES_PER_ELEMENT)
+        pt1_1 = window._WASM._malloc(16 * Float32Array.BYTES_PER_ELEMENT)
+        pt2_1 = window._WASM._malloc(16 * Float32Array.BYTES_PER_ELEMENT)
         for (let i = 0; i < mat1.elements.length; i++) {
             window._WASM.setValue(pt1_1 + Float32Array.BYTES_PER_ELEMENT * i, mat1.elements[i], 'float')
             window._WASM.setValue(pt2_1 + Float32Array.BYTES_PER_ELEMENT * i, mat2.elements[i], 'float')
@@ -63,8 +64,8 @@ const case3 = (wasm = false) => {
     let result
     if (wasm) {
         window._WASM['_mat4MultiplyMat4'].apply(null, [pt1_1, pt2_1])
-        // window._WASM.asm.free(pt1_1)
-        // window._WASM.asm.free(pt2_1)
+        window._WASM._free(pt1_1)
+        window._WASM._free(pt2_1)
     } else {
         mat1.clone().multiply(mat2)
     }
@@ -76,9 +77,6 @@ const case3 = (wasm = false) => {
  */
 const case4 = (wasm) => { //  using em_bind()
     if (wasm) {
-        if (!window._WASM.__jsRegisters.__registerMat4Multiply) window._WASM.__jsRegisters.__registerMat4Multiply = new THREE.Matrix4()
-        window._WASM.__jsRegisters.__registerMat4Multiply1 = mat1
-        window._WASM.__jsRegisters.__registerMat4Multiply2 = mat2
         window._WASM['_mat4MultiplyMat4CallJs'].apply(null, [])
     } else {
         mat1.clone().multiply(mat2)
@@ -95,16 +93,16 @@ const case7 = (wasm) => { // using em_bind() with value_array, value_object (arr
 
 const case8 = (wasm) => { // using em_bind() with value_array, value_object (array and object auto-convert)
     if (wasm) {
-        const pt1 = window._WASM.asm.malloc(mat1.elements.length * Float32Array.BYTES_PER_ELEMENT)
-        const pt2 = window._WASM.asm.malloc(mat2.elements.length * Float32Array.BYTES_PER_ELEMENT)
+        const pt1 = window._WASM._malloc(mat1.elements.length * Float32Array.BYTES_PER_ELEMENT)
+        const pt2 = window._WASM._malloc(mat2.elements.length * Float32Array.BYTES_PER_ELEMENT)
         for (let i = 0; i < mat1.elements.length; i++) {
             window._WASM.setValue(pt1 + Float32Array.BYTES_PER_ELEMENT * i, mat1.elements[i], 'float')
             window._WASM.setValue(pt2 + Float32Array.BYTES_PER_ELEMENT * i, mat2.elements[i], 'float')
         }
         const res = new THREE.Matrix4()
         res.elements = window._WASM.mat4MultiplyMat4_3.call(null, [pt1, pt2])
-        window._WASM.asm.free(pt1)
-        window._WASM.asm.free(pt2)
+        window._WASM._free(pt1)
+        window._WASM._free(pt2)
         return res
     } else {
         return mat1.clone().multiply(mat2)
@@ -132,11 +130,26 @@ const testCases = [
 const init = function () {
     initWasm().then(WASM => {
         window._WASM = WASM
+        fetch("../../static/assemblyScripts/build/release.wasm") // assemblyScripts框架编译的 ts->wasm
+            .then(response => response.arrayBuffer())
+            .then(buffer => WebAssembly.instantiate(buffer, {
+                env: {
+                    // memory,
+                    abort() { },
+                    "Math.random": Math.random
+                },
+                config: {},
+            }))
+            .then(module => {
+                console.error('as wasm module', module, module.instance.exports.getNewMat4())
+            })
     })
 }
 
 const test = () => {
     document.getElementById('result').innerHTML = ''
+    durations = []
+    wasmDurations = []
     testCases.forEach((item, index) => {
         durations.push(0)
         wasmDurations.push(0)
