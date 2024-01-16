@@ -520,6 +520,32 @@ extern "C"
         res[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
         res[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
     }
+
+    void EMSCRIPTEN_KEEPALIVE matrixComposeReturnVoid(float *mat, float px, float py, float pz, float qx, float qy, float qz, float qw, float _sx, float _sy, float _sz)
+    {
+        const float x = qx, y = qy, z = qz, w = qw;
+        const float x2 = x + x, y2 = y + y, z2 = z + z;
+        const float xx = x * x2, xy = x * y2, xz = x * z2;
+        const float yy = y * y2, yz = y * z2, zz = z * z2;
+        const float wx = w * x2, wy = w * y2, wz = w * z2;
+        const float sx = _sx, sy = _sy, sz = _sz;
+        mat[0] = (1 - (yy + zz)) * sx;
+        mat[1] = (xy + wz) * sx;
+        mat[2] = (xz - wy) * sx;
+        mat[3] = 0;
+        mat[4] = (xy - wz) * sy;
+        mat[5] = (1 - (xx + zz)) * sy;
+        mat[6] = (yz + wx) * sy;
+        mat[7] = 0;
+        mat[8] = (xz + wy) * sz;
+        mat[9] = (yz - wx) * sz;
+        mat[10] = (1 - (xx + yy)) * sz;
+        mat[11] = 0;
+        mat[12] = px;
+        mat[13] = py;
+        mat[14] = pz;
+        mat[15] = 1;
+    }
 }
 
 // static unsigned char data[] = {0, 1, 2, 3, 4, 5, 6, 7};

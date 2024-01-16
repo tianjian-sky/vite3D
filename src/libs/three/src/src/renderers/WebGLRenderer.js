@@ -1139,7 +1139,7 @@ class WebGLRenderer {
         // Rendering
 
         this.render = function (scene, camera) {
-
+            const _tp = performance.now()
             if (camera !== undefined && camera.isCamera !== true) {
 
                 console.error('THREE.WebGLRenderer.render: camera is not an instance of THREE.Camera.');
@@ -1172,7 +1172,7 @@ class WebGLRenderer {
             currentRenderState.init();
 
             renderStateStack.push(currentRenderState);
-
+            window.preRenderDuration = performance.now() - _tp
             _projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
             _frustum.setFromProjectionMatrix(_projScreenMatrix);
 
@@ -1213,9 +1213,7 @@ class WebGLRenderer {
 
 
             //
-            const _tb = performance.now()
             background.render(currentRenderList, scene);
-            window.__bgDuration += performance.now() - _tb
 
             // render scene
 
@@ -1240,6 +1238,7 @@ class WebGLRenderer {
             }
 
             //
+            const _tb = performance.now()
 
             if (_currentRenderTarget !== null) {
 
@@ -1286,7 +1285,7 @@ class WebGLRenderer {
                 currentRenderList = null;
 
             }
-
+            window.postRenderDuration += performance.now() - _tb
         };
 
         function projectObject(object, camera, groupOrder, sortObjects) {
@@ -1567,9 +1566,6 @@ class WebGLRenderer {
         function renderObject(object, scene, camera, geometry, material, group) {
 
             object.onBeforeRender(_this, scene, camera, geometry, material, group);
-            if (object.id == 5229) {
-                console.warn('object.modelViewMatrix', object.id, object.modelViewMatrix)
-            }
             object.modelViewMatrix.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld, new Matrix4());
             object.normalMatrix.getNormalMatrix(object.modelViewMatrix);
 

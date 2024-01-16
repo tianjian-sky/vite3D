@@ -3,7 +3,7 @@
     </div>
     <button v-if="!auroRender" style="position:absolute;bottom:10px;left:10px;" @click="animate">render</button>
     <button style="position:absolute;bottom:90px;left:10px;" @click="(auroRender = !auroRender) && animate()">{{auroRender ? '关闭' : '开启'}}自动渲染</button>
-    <button style="position:absolute;bottom:50px;left:10px;" @click="toggleWasm">{{useWasm ? '关闭' : '开启'}}wasm</button>
+    <!-- <button style="position:absolute;bottom:50px;left:10px;" @click="toggleWasm">{{useWasm ? '关闭' : '开启'}}wasm</button> -->
 </template>
 
 <script setup lang="ts">
@@ -87,8 +87,19 @@ const resetTestFlg = function () {
     window.__bgDuration = 0
     window.__setupPrograme = 0
     window.__setupState = 0
+    window.__v3Create = 0
     window.matMultiplyCalls = 0
     window.vec3MultiplyMat4Calls = 0
+    window.preRenderDuration = 0
+    window.postRenderDuration = 0
+    window.__updateMatrixWorldCount = 0
+    window.__updateMatrixWorldTime = 0
+    window.__updateMatrixWorldTime2 = 0
+    window.__updateMatrixWorldTime3 = 0
+    window.__updateMatrixWorldTime4 = 0
+    window.__updateMatrixWorldTime5 = 0
+    window.__mat4ComposeCount = 0
+    window._mat4ComposeDuration = 0
     window.__time1 = 0
     window.__time2 = 0
     window.frameRenderDuration = performance.now()
@@ -97,7 +108,16 @@ const printTestFlg = function () {
     window.frameRenderDuration = performance.now() - window.frameRenderDuration
     console.log(`Mat4矩阵相乘->次数：${window.matMultiplyCalls}  耗时：${window.__time1}wasm模式：${useWasm.value}`)
     console.log(`Vec3乘Mat4->次数：${window.vec3MultiplyMat4Calls}  耗时：${window.__time2}wasm模式：${useWasm.value}`)
+    console.log(`updateMatrix操作次数：${window.__updateMatrixWorldCount}  耗时：${window.__updateMatrixWorldTime}wasm模式：${useWasm.value}`)
+    // console.log(`updateMatrix操作次数2：${window.__updateMatrixWorldCount}  耗时：${window.__updateMatrixWorldTime2}wasm模式：${useWasm.value}`)
+    // console.log(`updateMatrix操作次数3：${window.__updateMatrixWorldCount}  耗时：${window.__updateMatrixWorldTime3}wasm模式：${useWasm.value}`)
+    // console.log(`updateMatrix操作次数4：${window.__updateMatrixWorldCount}  耗时：${window.__updateMatrixWorldTime4}wasm模式：${useWasm.value}`)
+    // console.log(`updateMatrix操作次数5：${window.__updateMatrixWorldCount}  耗时：${window.__updateMatrixWorldTime5}wasm模式：${useWasm.value}`)
+    console.log(`vec3访问耗时：${window.__v3Create}`)
+    console.log(`mat4compose操作：次数${window.__mat4ComposeCount}，耗时：${window._mat4ComposeDuration}`)
     console.log(`渲染耗时：${window.frameRenderDuration}`)
+    console.log(`   --pre render耗时：${window.preRenderDuration}`)
+    console.log(`   --post render耗时：${window.postRenderDuration}`)
     console.log(`   --projectObject耗时：${window.__projectObjectDuration}`)
     console.log(`   --sorttObjectsDuration耗时：${window.__sorttObjectsDuration}`)
     console.log(`   --renderBackground耗时：${window.__bgDuration}`)

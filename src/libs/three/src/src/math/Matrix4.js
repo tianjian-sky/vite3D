@@ -1828,36 +1828,20 @@ class Matrix4 {
     }
 
     compose(position, quaternion, scale) {
-
-        const te = this.elements;
-
+        const t = performance.now()
+        window.__mat4ComposeCount++
         const x = quaternion._x, y = quaternion._y, z = quaternion._z, w = quaternion._w;
-        const x2 = x + x, y2 = y + y, z2 = z + z;
-        const xx = x * x2, xy = x * y2, xz = x * z2;
-        const yy = y * y2, yz = y * z2, zz = z * z2;
-        const wx = w * x2, wy = w * y2, wz = w * z2;
         const sx = scale.x, sy = scale.y, sz = scale.z;
+        if (!this._composeByWasm) {
+            this._composeByWasm = window._WASM.cwrap('matrixComposeReturnVoid', 'void', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'])
+        }
         if (window.__USE_WASM) {
-            this.setEl(0, (1 - (yy + zz)) * sx)
-            this.setEl(1, (xy + wz) * sx)
-            this.setEl(2, (xz - wy) * sx)
-            this.setEl(3, 0)
-
-            this.setEl(4, (xy - wz) * sy)
-            this.setEl(5, (1 - (xx + zz)) * sy)
-            this.setEl(6, (yz + wx) * sy)
-            this.setEl(7, 0)
-
-            this.setEl(8, (xz + wy) * sz)
-            this.setEl(9, (yz - wx) * sz)
-            this.setEl(10, (1 - (xx + yy)) * sz)
-            this.setEl(11, 0)
-
-            this.setEl(12, position.x)
-            this.setEl(13, position.y)
-            this.setEl(14, position.z)
-            this.setEl(15, 1)
+            this._composeByWasm(this.pt, position.x, position.y, position.z, x, y, z, w, sx, sy, sz)
         } else {
+            const x2 = x + x, y2 = y + y, z2 = z + z;
+            const xx = x * x2, xy = x * y2, xz = x * z2;
+            const yy = y * y2, yz = y * z2, zz = z * z2;
+            const wx = w * x2, wy = w * y2, wz = w * z2;
             this._elements[0] = (1 - (yy + zz)) * sx;
             this._elements[1] = (xy + wz) * sx;
             this._elements[2] = (xz - wy) * sx;
@@ -1878,6 +1862,7 @@ class Matrix4 {
             this._elements[14] = position.z;
             this._elements[15] = 1;
         }
+        window._mat4ComposeDuration += performance.now() - t
         return this;
 
     }

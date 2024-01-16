@@ -759,7 +759,6 @@ class Vector3 {
             this.x = x;
             this.y = y;
             this.z = z;
-
         }
     }
     setEl(index, val) {
@@ -767,67 +766,44 @@ class Vector3 {
         this[index == 0 ? 'x' : index == 1 ? 'y' : 'z'] = val
     }
     getEl(index) {
-        if (window.__USE_WASM) {
-            return window._WASM.getValue(this.pt + Float32Array.BYTES_PER_ELEMENT * index, 'float')
-        } else {
-            return this[index == 0 ? 'x' : index == 1 ? 'y' : 'z']
-        }
+        return this[index == 0 ? 'x' : index == 1 ? 'y' : 'z']
     }
     set(x, y, z) {
 
         if (z === undefined) z = this.z; // sprite.scale.set(x,y)
-        if (window.__USE_WASM) {
-            this.setEl(0, x)
-            this.setEl(1, y)
-            this.setEl(2, z)
-        }
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.setEl(0, x)
+        this.setEl(1, y)
+        this.setEl(2, z)
 
         return this;
 
     }
 
     setScalar(scalar) {
-        if (window.__USE_WASM) {
-            this.setEl(0, scalar)
-            this.setEl(1, scalar)
-            this.setEl(2, scalar)
-        }
-        this.x = scalar;
-        this.y = scalar;
-        this.z = scalar;
+        this.setEl(0, scalar)
+        this.setEl(1, scalar)
+        this.setEl(2, scalar)
 
         return this;
 
     }
 
     setX(x) {
-        if (window.__USE_WASM) {
-            this.setEl(0, x)
-        }
-        this.x = x;
+        this.setEl(0, x)
 
         return this;
 
     }
 
     setY(y) {
-        if (window.__USE_WASM) {
-            this.setEl(1, y)
-        }
-        this.y = y;
+        this.setEl(1, y)
 
         return this;
 
     }
 
     setZ(z) {
-        if (window.__USE_WASM) {
-            this.setEl(2, z)
-        }
-        this.z = z;
+        this.setEl(2, z)
 
         return this;
 
@@ -835,14 +811,6 @@ class Vector3 {
 
     setComponent(index, value) {
         this.setEl(index, value)
-        switch (index) {
-
-            case 0: this.x = value; break;
-            case 1: this.y = value; break;
-            case 2: this.z = value; break;
-            default: throw new Error('index is out of range: ' + index);
-
-        }
 
         return this;
 
