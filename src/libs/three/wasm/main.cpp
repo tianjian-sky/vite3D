@@ -546,6 +546,18 @@ extern "C"
         mat[14] = pz;
         mat[15] = 1;
     }
+
+    float EMSCRIPTEN_KEEPALIVE mat4Determinant(float *mat)
+    {
+        const float n11 = mat[0], n12 = mat[4], n13 = mat[8], n14 = mat[12];
+        const float n21 = mat[1], n22 = mat[5], n23 = mat[9], n24 = mat[13];
+        const float n31 = mat[2], n32 = mat[6], n33 = mat[10], n34 = mat[14];
+        const float n41 = mat[3], n42 = mat[7], n43 = mat[11], n44 = mat[15];
+        return (n41 * (+n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34) +
+                n42 * (+n11 * n23 * n34 - n11 * n24 * n33 + n14 * n21 * n33 - n13 * n21 * n34 + n13 * n24 * n31 - n14 * n23 * n31) +
+                n43 * (+n11 * n24 * n32 - n11 * n22 * n34 - n14 * n21 * n32 + n12 * n21 * n34 + n14 * n22 * n31 - n12 * n24 * n31) +
+                n44 * (-n13 * n22 * n31 - n11 * n23 * n32 + n11 * n22 * n33 + n13 * n21 * n32 - n12 * n21 * n33 + n12 * n23 * n31));
+    }
 }
 
 // static unsigned char data[] = {0, 1, 2, 3, 4, 5, 6, 7};

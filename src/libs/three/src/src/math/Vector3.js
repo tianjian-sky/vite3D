@@ -749,6 +749,7 @@ class Vector3 {
     constructor(x = 0, y = 0, z = 0, debug = false) {
         this.uuid = uuid++
         this.debug = debug
+        const t = performance.now()
         Vector3.prototype.isVector3 = true;
         if (window.__USE_WASM) {
             this.pt = window._WASM._malloc(3 * Float32Array.BYTES_PER_ELEMENT)
@@ -760,6 +761,7 @@ class Vector3 {
             this.y = y;
             this.z = z;
         }
+        window.vec3CreateTime += performance.now() - t
     }
     setEl(index, val) {
         if (window.__USE_WASM) window._WASM.setValue(this.pt + Float32Array.BYTES_PER_ELEMENT * index, val, 'float')

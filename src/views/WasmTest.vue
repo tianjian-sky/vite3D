@@ -43,6 +43,8 @@ watch(useWasm, ()=> {
 
 const init = function () {
     // reusable variables
+    window.mat4CreateTime = 0
+    window.vec3CreateTime = 0
     initWasm().then((WASM) => {
         window._WASM = WASM
         Promise.all([import('../libs/three/src/build/three.module.js'), import('../libs/three/loaders/GLTFLoader_2.js'), import('../libs/three/OrbitControls_2.js')])
@@ -100,12 +102,31 @@ const resetTestFlg = function () {
     window.__updateMatrixWorldTime5 = 0
     window.__mat4ComposeCount = 0
     window._mat4ComposeDuration = 0
+    window.__mat4DeterminantCount = 0
+    window._mat4DeterminantDuration = 0
+    window.__mat4DeterminantCount = 0
+    window._mat4DeterminantDuration = 0
     window.__time1 = 0
     window.__time2 = 0
+    window.mat4setTime = 0
+    window.mat4getTime = 0
+    window.mat4visitTime = 0
+    window.__getWireframeAttribute = 0
+    window.__setGlMode = 0
+    window.__glRender = 0
+    window.__glSetIndex = 0
+    window.__calcDeterninant = 0
+    window.__setUniform = 0
     window.frameRenderDuration = performance.now()
 }
 const printTestFlg = function () {
     window.frameRenderDuration = performance.now() - window.frameRenderDuration
+    console.log(`mat4compose操作：次数${window.__mat4ComposeCount}，耗时：${window._mat4ComposeDuration}`)
+    console.log(`vec3CreateTime:${window.vec3CreateTime}`)
+    console.log(`mat4CreateTime:${window.mat4CreateTime}`)
+    console.log(`mat4setTime:${window.mat4setTime}`)
+    console.log(`mat4getTime:${window.mat4getTime}`)
+    console.log(`mat4visitTime:${window.mat4visitTime}`)
     console.log(`Mat4矩阵相乘->次数：${window.matMultiplyCalls}  耗时：${window.__time1}wasm模式：${useWasm.value}`)
     console.log(`Vec3乘Mat4->次数：${window.vec3MultiplyMat4Calls}  耗时：${window.__time2}wasm模式：${useWasm.value}`)
     console.log(`updateMatrix操作次数：${window.__updateMatrixWorldCount}  耗时：${window.__updateMatrixWorldTime}wasm模式：${useWasm.value}`)
@@ -115,6 +136,7 @@ const printTestFlg = function () {
     // console.log(`updateMatrix操作次数5：${window.__updateMatrixWorldCount}  耗时：${window.__updateMatrixWorldTime5}wasm模式：${useWasm.value}`)
     console.log(`vec3访问耗时：${window.__v3Create}`)
     console.log(`mat4compose操作：次数${window.__mat4ComposeCount}，耗时：${window._mat4ComposeDuration}`)
+    console.log(`mat4determinant操作：次数${window.__mat4DeterminantCount}，耗时：${window._mat4DeterminantDuration}`)
     console.log(`渲染耗时：${window.frameRenderDuration}`)
     console.log(`   --pre render耗时：${window.preRenderDuration}`)
     console.log(`   --post render耗时：${window.postRenderDuration}`)
@@ -123,7 +145,12 @@ const printTestFlg = function () {
     console.log(`   --renderBackground耗时：${window.__bgDuration}`)
     console.log(`   --renderbuffer耗时：${window.__renderBufferDuration}`)
     console.log(`       --setupPrograme耗时：${window.__setupPrograme}`)
+    console.log(`           __setUniform耗时：${window.__setUniform}`)
+    console.log(`       --getWireframeAttribute耗时:${window.__getWireframeAttribute}`)
     console.log(`       --setupState耗时：${window.__setupState}`)
+    console.log(`       --setGlMode耗时：${window.__setGlMode}`)
+    console.log(`       --glRender耗时：${window.__glRender}`)
+    console.log(`       --glsetIndex耗时：${window.__glSetIndex}`)
 }
 function animate() {
     if (auroRender.value) {

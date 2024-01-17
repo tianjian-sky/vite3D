@@ -930,6 +930,7 @@ class Matrix4 {
     pt = 0
     debug = false
     constructor(n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44, debug) {
+        const t = performance.now()
         this.uuid = uuid++
         if (arguments.length > 16 && debug) this.debug = debug
         Matrix4.prototype.isMatrix4 = true;
@@ -946,6 +947,7 @@ class Matrix4 {
                 0, 0, 0, 1
             )
         }
+        window.mat4CreateTime += performance.now() - t
     }
 
     set elements(arr) {
@@ -971,12 +973,18 @@ class Matrix4 {
     }
 
     setEl(index, val) {
+        const t = performance.now()
         if (window.__USE_WASM) window._WASM.setValue(this.pt + Float32Array.BYTES_PER_ELEMENT * index, val, 'float')
         this._elements[index] = val
+        window.mat4setTime += performance.now() - t
     }
     getEl(index) {
-        if (window.__USE_WASM) return window._WASM.getValue(this.pt + Float32Array.BYTES_PER_ELEMENT * index, 'float')
-        else return this._elements[index]
+        const t = performance.now()
+        let el
+        if (window.__USE_WASM) el = window._WASM.getValue(this.pt + Float32Array.BYTES_PER_ELEMENT * index, 'float')
+        else el = this._elements[index]
+        window.mat4getTime += performance.now() - t
+        return el
     }
     set(n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44) {
         for (let i = 0; i < arguments.length; i++) {
@@ -1461,54 +1469,54 @@ class Matrix4 {
     }
 
     determinant() {
-        let n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44
         const te = this.elements;
+        let res
+        window.__mat4DeterminantCount++
+        const t = performance.now()
         if (window.__USE_WASM) {
-            n11 = this.getEl(0), n12 = this.getEl(4), n13 = this.getEl(8), n14 = this.getEl(12);
-            n21 = this.getEl(1), n22 = this.getEl(5), n23 = this.getEl(9), n24 = this.getEl(13);
-            n31 = this.getEl(2), n32 = this.getEl(6), n33 = this.getEl(10), n34 = this.getEl(14);
-            n41 = this.getEl(3), n42 = this.getEl(7), n43 = this.getEl(11), n44 = this.getEl(15);
+            res = window._WASM['_mat4Determinant'].apply(null, [this.pt])
         } else {
-            n11 = this.getEl(0), n12 = this.getEl(4), n13 = this.getEl(8), n14 = this.getEl(12);
-            n21 = this.getEl(1), n22 = this.getEl(5), n23 = this.getEl(9), n24 = this.getEl(13);
-            n31 = this.getEl(2), n32 = this.getEl(6), n33 = this.getEl(10), n34 = this.getEl(14);
-            n41 = this.getEl(3), n42 = this.getEl(7), n43 = this.getEl(11), n44 = this.getEl(15);
+            let n11 = this._elements[0], n12 = this._elements[4], n13 = this._elements[8], n14 = this._elements[12];
+            let n21 = this._elements[1], n22 = this._elements[5], n23 = this._elements[9], n24 = this._elements[13];
+            let n31 = this._elements[2], n32 = this._elements[6], n33 = this._elements[10], n34 = this._elements[14];
+            let n41 = this._elements[3], n42 = this._elements[7], n43 = this._elements[11], n44 = this._elements[15];
+            res = (
+                n41 * (
+                    + n14 * n23 * n32
+                    - n13 * n24 * n32
+                    - n14 * n22 * n33
+                    + n12 * n24 * n33
+                    + n13 * n22 * n34
+                    - n12 * n23 * n34
+                ) +
+                n42 * (
+                    + n11 * n23 * n34
+                    - n11 * n24 * n33
+                    + n14 * n21 * n33
+                    - n13 * n21 * n34
+                    + n13 * n24 * n31
+                    - n14 * n23 * n31
+                ) +
+                n43 * (
+                    + n11 * n24 * n32
+                    - n11 * n22 * n34
+                    - n14 * n21 * n32
+                    + n12 * n21 * n34
+                    + n14 * n22 * n31
+                    - n12 * n24 * n31
+                ) +
+                n44 * (
+                    - n13 * n22 * n31
+                    - n11 * n23 * n32
+                    + n11 * n22 * n33
+                    + n13 * n21 * n32
+                    - n12 * n21 * n33
+                    + n12 * n23 * n31
+                )
+            );
         }
-        return (
-            n41 * (
-                + n14 * n23 * n32
-                - n13 * n24 * n32
-                - n14 * n22 * n33
-                + n12 * n24 * n33
-                + n13 * n22 * n34
-                - n12 * n23 * n34
-            ) +
-            n42 * (
-                + n11 * n23 * n34
-                - n11 * n24 * n33
-                + n14 * n21 * n33
-                - n13 * n21 * n34
-                + n13 * n24 * n31
-                - n14 * n23 * n31
-            ) +
-            n43 * (
-                + n11 * n24 * n32
-                - n11 * n22 * n34
-                - n14 * n21 * n32
-                + n12 * n21 * n34
-                + n14 * n22 * n31
-                - n12 * n24 * n31
-            ) +
-            n44 * (
-                - n13 * n22 * n31
-                - n11 * n23 * n32
-                + n11 * n22 * n33
-                + n13 * n21 * n32
-                - n12 * n21 * n33
-                + n12 * n23 * n31
-            )
-
-        );
+        window._mat4DeterminantDuration += performance.now() - t
+        return res
     }
 
     transpose() {

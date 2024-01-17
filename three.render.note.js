@@ -55,10 +55,11 @@ if (_currentRenderTarget !== null) {
 
 /**
  *  function renderBufferDirect ( camera, scene, geometry, material, object, group )
- *  1. const program = setProgram( camera, scene, geometry, material, object );
- *  2. state.setMaterial( material, frontFaceCW );
- *  3. bindingStates.setup(object, material, program, geometry, index);
- *  4. renderer.renderInstances(drawStart, drawCount, instanceCount)
+ *  1. object.isMesh && object.matrixWorld.determinant() < 0
+ *  2. const program = setProgram( camera, scene, geometry, material, object );
+ *  3. state.setMaterial( material, frontFaceCW );
+ *  4. bindingStates.setup(object, material, program, geometry, index);
+ *  5. renderer.renderInstances(drawStart, drawCount, instanceCount)
  *          gl.drawElements
  *      或者
  *      renderer.render(drawStart, drawCount);

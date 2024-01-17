@@ -791,7 +791,7 @@ class WebGLRenderer {
             state.setMaterial(material, frontFaceCW);
             window.__setupPrograme += performance.now() - _t1
             //
-
+            const _t6 = performance.now()
             let index = geometry.index;
             let rangeFactor = 1;
 
@@ -835,12 +835,12 @@ class WebGLRenderer {
             const drawCount = drawEnd - drawStart;
 
             if (drawCount < 0 || drawCount === Infinity) return;
-
+            window.__getWireframeAttribute += performance.now() - _t6
             //
             const _t2 = performance.now()
             bindingStates.setup(object, material, program, geometry, index);
             window.__setupState += performance.now() - _t2
-
+            const _t5 = performance.now()
             let attribute;
             let renderer = bufferRenderer;
 
@@ -852,9 +852,9 @@ class WebGLRenderer {
                 renderer.setIndex(attribute);
 
             }
-
+            window.__glSetIndex += performance.now() - _t5
             //
-
+            const _t3 = performance.now()
             if (object.isMesh) {
 
                 if (material.wireframe === true) {
@@ -899,7 +899,8 @@ class WebGLRenderer {
                 renderer.setMode(_gl.TRIANGLES);
 
             }
-
+            window.__setGlMode += performance.now() - _t3
+            const _t4 = performance.now()
             if (object.isBatchedMesh) {
 
                 renderer.renderMultiDraw(object._multiDrawStarts, object._multiDrawCounts, object._multiDrawCount);
@@ -920,6 +921,7 @@ class WebGLRenderer {
                 renderer.render(drawStart, drawCount);
 
             }
+            window.__glRender += performance.now() - _t4
             window.__renderBufferDuration += performance.now() - a
         };
 
@@ -2076,13 +2078,13 @@ class WebGLRenderer {
                 p_uniforms.setValue(_gl, 'center', object.center);
 
             }
-
+            const t = performance.now()
             // common matrices
 
             p_uniforms.setValue(_gl, 'modelViewMatrix', object.modelViewMatrix);
             p_uniforms.setValue(_gl, 'normalMatrix', object.normalMatrix);
             p_uniforms.setValue(_gl, 'modelMatrix', object.matrixWorld);
-
+            window.__setUniform += performance.now() - t
             // UBOs
 
             if (material.isShaderMaterial || material.isRawShaderMaterial) {
