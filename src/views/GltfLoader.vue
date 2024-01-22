@@ -15,7 +15,7 @@ import Stats from '../libs/three/stats.module.js'
 import { initWasm } from '../libs/three/wasm/install.js'
 
 defineOptions({
-  name: 'WasmTest'
+  name: 'GltfLoader'
 })
 
 interface Window {
@@ -47,7 +47,7 @@ const init = function () {
     window.vec3CreateTime = 0
     initWasm().then((WASM) => {
         window._WASM = WASM
-        Promise.all([import('../libs/three/src/build/three.module.js'), import('../libs/three/loaders/GLTFLoader_2.js'), import('../libs/three/OrbitControls_2.js')])
+        Promise.all([import('../libs/three/src/build/three.module.js'), import('../libs/three/loaders/GLTFLoader_dev.js'), import('../libs/three/OrbitControls_2.js')])
         .then(res => {
             window.THREE = THREE = res[0] 
             GLTFLoader = res[1].install()
@@ -72,7 +72,9 @@ const init = function () {
         document.body.appendChild( stats.dom );
         const loader = new GLTFLoader();
         // loader.load( '/static/models/big/main.gltf', object => {
+        console.time('gltf解析')
         loader.load( '/static/models/school/main.gltf', object => {
+            console.timeEnd('gltf解析')
             object.scene.rotateX(-.5 * Math.PI)
             scene.add( object.scene )
             const bbox = new THREE.Box3()
