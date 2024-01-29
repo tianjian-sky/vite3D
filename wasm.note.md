@@ -383,3 +383,46 @@ https://github.com/AssemblyScript/assemblyscript/tree/main/std/assembly/rt
 https://www.assemblyscript.org/compiler.html#compiler-options
 https://www.assemblyscript.org/stdlib/globals.html
 
+
+## -mnontrapping-fptoint.
+The LLVM Wasm backend avoids traps by adding more code around each possible trap (basically clamping the value if it would trap). This can increase code size and decrease speed, if you don’t need that extra code. The proper solution for this is to use newer Wasm instructions that do not trap, by calling emcc or clang with -mnontrapping-fptoint. That code may not run in older VMs, though.
+
+## Web server setup
+To serve Wasm in the most efficient way over the network, make sure your web server has the proper MIME type for .wasm files, which is application/wasm. That will allow streaming compilation, where the browser can start to compile code as it downloads.
+
+In Apache, you can do this with
+
+AddType application/wasm .wasm
+Also make sure that gzip is enabled:
+
+AddOutputFilterByType DEFLATE application/wasm
+If you serve large .wasm files, the webserver will consume CPU compressing them on the fly at each request. Instead you can pre-compress them to .wasm.gz and use content negotiation:
+
+Options Multiviews
+RemoveType .gz
+AddEncoding x-gzip .gz
+AddType application/wasm .wasm
+
+## static linking
+
+```shell
+ emcc a.o b.o c.o --memory-init-file=0  -o ./build/avc.js   -sFILESYSTEM=0  -sINVOKE_RUN=0 -sDOUBLE_MODE=0 -sAGGRESSIVE_VARIABLE_ELIMINATION=1 -sALIASING_FUNCTION_POINTERS=1 -sDISABLE_EXCEPTION_CATCHING=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_broadwayGetMajorVersion,_broadwayGetMinorVersion,_broadwayInit,_broadwayExit,_broadwayCreateStream,_broadwayPlayStream,_broadwayOnHeadersDecoded,_broadwayOnPictureDecoded -sINITIAL_MEMORY=52428800 --js-library ./Decoder/library.js 
+```
+
+## dynamic linking
+
+In Emscripten’s case, code is typically going to run on the web. That means the following:
+
+* The application is running in a sandbox. It has no local system libraries to dynamically link to; it must ship its own system library code.
+
+* Code size is a major concern, as the application’s code is being downloaded over the internet, which is many orders of magnitude slower than an installed native app on one’s local machine.
+
+For that reason, Emscripten automatically handles system libraries for you and automatically does dead code elimination etc. to do the best possible job it can at getting them small.
+
+### Load-time Dynamic Linking
+
+
+
+### Runtime Dynamic Linking with dlopen()
+
+

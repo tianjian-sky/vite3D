@@ -1,0 +1,1 @@
+g++ ./main.cpp  -I./lib -L./lib -la --std=c++11

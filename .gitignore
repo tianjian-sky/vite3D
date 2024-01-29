@@ -31,3 +31,10 @@ auto-imports.d.ts
 static
 *.out
 *.wasm.*
+CmakeFiles
+dist
+*.cmake
+*.o
+*.so
+CMakeCache.txt
+Makefile
