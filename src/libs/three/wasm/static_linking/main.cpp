@@ -15,8 +15,14 @@ extern "C"
     {
         cout << "hi" << endl;
     }
-    extern void _sayGoodbye();
-    extern void _sayHello();
+    extern void sayGoodBye();
+    extern void sayHello();
+    void EMSCRIPTEN_KEEPALIVE say()
+    {
+        sayHello();
+        sayHi();
+        sayGoodBye();
+    }
 }
 
 int main() {}

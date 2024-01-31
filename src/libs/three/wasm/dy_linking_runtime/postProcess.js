@@ -1,0 +1,8 @@
+const fs = require('fs')
+
+const origin = fs.readFileSync('./dynLink.wasm.js')
+let str = origin.toString()
+str = str.replace(`fetchRemotePackage(REMOTE_PACKAGE_NAME,`, 'fetchRemotePackage("/static/dy_linking_runtime/" + REMOTE_PACKAGE_NAME,')
+fs.writeFileSync('./dynLink.wasm.js', str, {
+    mode: 'w'
+})

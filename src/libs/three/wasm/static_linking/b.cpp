@@ -10,12 +10,8 @@ using namespace std;
 
 extern "C"
 {
-    void EMSCRIPTEN_KEEPALIVE sayGoodbye()
+    void EMSCRIPTEN_KEEPALIVE sayGoodBye()
     {
         cout << "goodblye" << endl;
-    }
-    void EMSCRIPTEN_KEEPALIVE _sayGoodbye()
-    {
-        cout << "goodblye_" << endl;
     }
 }

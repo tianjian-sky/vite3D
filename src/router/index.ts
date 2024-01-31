@@ -18,6 +18,14 @@ const router = createRouter({
             component: () => import('../views/Babylon.vue')
         },
         {
+            path: '/babylonGpuPick',
+            name: 'babylonGpuPick',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/BabylonGpuPick.vue')
+        },
+        {
             path: '/webgpu',
             name: 'webgpu',
             // route level code-splitting
@@ -96,6 +104,22 @@ const router = createRouter({
             // this generates a separate chunk (About.[hash].js) for this route
             // which is lazy-loaded when the route is visited.
             component: () => import('../views/WasmCompare.vue')
+        },
+        {
+            path: '/wasmLinking',
+            name: 'wasmLinking',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/WasmLinking.vue')
+        },
+        {
+            path: '/bimFace',
+            name: 'BimFace',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/BimFace.vue')
         },
         {
             path: '/gltfLoader',

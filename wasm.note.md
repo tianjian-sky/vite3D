@@ -421,8 +421,48 @@ For that reason, Emscripten automatically handles system libraries for you and a
 
 ### Load-time Dynamic Linking
 
+#### 1.full export
+``` shell
+~/develop/emscripten-main/emcc ./lib/a.cpp  -c -o a.o -sSIDE_MODULE  -mnontrapping-fptoint # -sEXPORTED_FUNCTIONS=_sayGoodBye,_sayHello,_sayHi # -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue 
+~/develop/emscripten-main/emcc -sMAIN_MODULE ./main.cpp a.o  -o dynLink.wasm.js -mnontrapping-fptoint -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_sayGoodBye,_sayHello,_sayHi -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue -sINITIAL_MEMORY=52428800
+
+```
+#### 2.DCE'd module. We eliminate dead code normally.
+``` shell
+~/develop/emscripten-main/emcc ./lib/a.cpp  -c -o a.o -sSIDE_MODULE=2  -mnontrapping-fptoint # -sEXPORTED_FUNCTIONS=_sayGoodBye,_sayHello,_sayHi # -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue 
+~/develop/emscripten-main/emcc -sMAIN_MODULE=2 ./main.cpp a.o  -o dynLink.wasm.js -mnontrapping-fptoint -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_sayGoodBye,_sayHello,_sayHi -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue -sINITIAL_MEMORY=52428800
+
+```
+
+However when linking a main module without its side modules (Usually with -sMAIN_MODULE=1) it is possible that required system libraries are not included. This section explains what to do to fix that by forcing the main module to be linked against certain libraries.
+
+You can build the main module with EMCC_FORCE_STDLIBS=1 in the environment to force inclusion of all standard libs. A more refined approach is to name the system libraries that you want to explicitly include. For example, with something like EMCC_FORCE_STDLIBS=libcxx,libcxxabi (if you need those two libs).
 
 
-### Runtime Dynamic Linking with dlopen()
+### Runtime Dynamic Linking with dlopen() dlsym()
+
+#### dlopen
+``` c++
+#include <dlfcn.h>
+
+void *dlopen(const char *filename, int flag);
+//dlopen用于打开指定名字(filename)的动态链接库，并返回操作句柄
+
+```
+#### dlsym
+
+``` c++
+
+void *dlsym(void *handle, const char *symbol);  
+//根据动态链接库操作句柄与符号,返回符号对应的地址。使用这个函数不但可以获取函数地址，也可以获取变量地址。handle是由dlopen打开动态链接库后返回的指针，symbol就是要求获取的函数或全局变量的名称.
+
+```
+
+### Packaging Files
+[Packaging Files](https://emscripten.org/docs/porting/files/packaging_files.html#packaging-files)
+
+#### embed-file
+#### preload-file
+
 
 

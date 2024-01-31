@@ -13,4 +13,8 @@ extern "C"
     {
         cout << "hello" << endl;
     }
+    void EMSCRIPTEN_KEEPALIVE _sayHello()
+    {
+        cout << "hello" << endl;
+    }
 }

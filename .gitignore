@@ -38,3 +38,4 @@ dist
 *.so
 CMakeCache.txt
 Makefile
+*.dylib

@@ -7,10 +7,15 @@
 #include <emscripten/val.h>
 
 using namespace std;
+
 extern "C"
 {
-    void EMSCRIPTEN_KEEPALIVE sayHello()
+    void EMSCRIPTEN_KEEPALIVE sayGoodBye()
     {
-        cout << "hello" << endl;
+        cout << "goodblye" << endl;
+    }
+    void EMSCRIPTEN_KEEPALIVE _sayGoodbye()
+    {
+        cout << "goodblye_" << endl;
     }
 }
