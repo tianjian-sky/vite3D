@@ -1,6 +1,9 @@
 <template>
     <div id="octree-demo-wrap">
         <div>
+            测试重复次数<input type="number" v-model="counts" />
+        </div>
+        <div>
             循环次数<input type="number" v-model="loops" />
         </div>
         <div><button @click="test">开始测试</button></div>
@@ -25,8 +28,10 @@ defineOptions({
   name: 'WasmBenchMark'
 })
 
-const loops = ref(1000)
+const loops = ref(10000)
+const counts = ref(1)
 
+let results = []
 let durations = []
 let wasmDurations = []
 
@@ -56,7 +61,7 @@ const prepareMat = (index, useWasm) => {
         }
         wasmDurations[index] = wasmDurations[index] - (performance.now() - t)
     } else {
-        durations[index] = durations[index]- (performance.now() - t)
+        durations[index] = durations[index] - (performance.now() - t)
     }
 }
 
@@ -67,7 +72,7 @@ const case3 = (wasm = false) => {
         window._WASM._free(pt1_1)
         window._WASM._free(pt2_1)
     } else {
-        mat1.clone().multiply(mat2)
+        mat1.multiply(mat2)
     }
     return result
 }
@@ -79,7 +84,7 @@ const case4 = (wasm) => { //  using em_bind()
     if (wasm) {
         window._WASM['_mat4MultiplyMat4CallJs'].apply(null, [])
     } else {
-        mat1.clone().multiply(mat2)
+        mat1.multiply(mat2)
     }
 }
 
@@ -87,7 +92,7 @@ const case7 = (wasm) => { // using em_bind() with value_array, value_object (arr
     if (wasm) {
         window._WASM.mat4MultiplyMat4_2.call(null, mat1.elements.concat(mat2.elements))
     } else {
-        mat1.clone().multiply(mat2)
+        mat1.multiply(mat2)
     }
 }
 
@@ -105,7 +110,7 @@ const case8 = (wasm) => { // using em_bind() with value_array, value_object (arr
         window._WASM._free(pt2)
         return res
     } else {
-        return mat1.clone().multiply(mat2)
+        return mat1.multiply(mat2)
     }
 }
 
@@ -148,25 +153,49 @@ const init = function () {
 
 const test = () => {
     document.getElementById('result').innerHTML = ''
-    durations = []
-    wasmDurations = []
-    testCases.forEach((item, index) => {
-        durations.push(0)
-        wasmDurations.push(0)
+    results = []
+    for (let _id = 0; _id < counts.value; _id++) {
+        durations = [0]
+        wasmDurations = []
         let t = performance.now()
         for (let i = 0; i < loops.value; i++) {
-            prepareMat(index, false)
-            item.fn()
+            prepareMat(0, false)
+            testCases[0].fn()
         }
-        durations[index] += performance.now() - t
-        t = performance.now()
-        for (let i = 0; i < loops.value; i++) {
-            prepareMat(index, true)
-            item.fn(true)
+        durations[0] += performance.now() - t
+        testCases.forEach((item, index) => {
+            wasmDurations.push(0)
+            t = performance.now()
+            for (let i = 0; i < loops.value; i++) {
+                prepareMat(index, true)
+                item.fn(true)
+            }
+            wasmDurations[index] += performance.now() - t
+        })
+        results.push([durations[0], wasmDurations])
+    }
+    console.log(results)
+    let output = ''
+    let avgTime = 0
+    for (let i = 0; i < counts.value; i++) {
+        avgTime += results[i][0]
+    }
+    avgTime /= counts.value
+    output +=  `<p>js耗时: ${avgTime}</p>`
+    for (let i = 0; i < testCases.length; i++) {
+        const item = testCases[i]
+        let subHtml = ''
+        let avgTime = 0
+        for (let j = 0; j < counts.value; j++) {
+            avgTime += results[j][1][i]
         }
-        wasmDurations[index] += performance.now() - t
-        document.getElementById('result').innerHTML = document.getElementById('result').innerHTML + `<p>${item.id}:</p><p>${item.id}:${item.desc}</p><p>循环次数：${loops.value}</p><p>js用时：${durations[index]}ms</p><p>wasm用时：${wasmDurations[index]}ms</p>`
-    })
+        avgTime /= counts.value
+        output +=  `
+            <p>${item.id}:${item.desc}</p>
+            <p>wasm用时：${avgTime}ms</p>
+        `
+    }
+    document.getElementById('result').innerHTML = output
 }
 
 onMounted(() => {

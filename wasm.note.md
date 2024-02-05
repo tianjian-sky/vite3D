@@ -463,6 +463,11 @@ void *dlsym(void *handle, const char *symbol);
 
 #### embed-file
 #### preload-file
+here are two alternatives for how files are packaged: preloading and embedding. Embedding stores the specified files inside the wasm file, while preloading packages them in a bundle on the side. Embedding files is more efficient than preloading because there isn’t a separate file to download and copy, but preloading enables the option to separately host the data.
+
+Emcc uses the file packager to package the files and generate the File System API calls that create and load the file system at run time. While Emcc is the recommended tool for packaging, there are cases where it can make sense to run the file packager manually
+### Emscripten file system architecture
+MEMFS is mounted at / when the runtime is initialized. Files to be added to the MEMFS virtual file system are specified at compile time using emcc, as discussed in Packaging Files. The files are loaded asynchronously by JavaScript using Synchronous XHRs when the page is first loaded. The compiled code is only allowed to run (and call synchronous APIs) when the asynchronous download has completed and the files are available in the virtual file system.
 
 
 

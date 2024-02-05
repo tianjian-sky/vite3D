@@ -11,9 +11,10 @@
 ~/develop/emscripten-main/emcc -sMAIN_MODULE=2 ./main.cpp -o dynLink.wasm.js -mnontrapping-fptoint -sEXPORT_ES6=1  --preload-file . -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_main -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue --pre-js=pre.js  -sENVIRONMENT=web -sINITIAL_MEMORY=52428800
 
 # node ./postProcess.js
-# sed -i 's/fetchRemotePackage(REMOTE_PACKAGE_NAME/fetchRemotePackage("\/static\/dy_linking_runtime\/" + REMOTE_PACKAGE_NAME/' dynLink.wasm.js
+
+# sed [opstions] "addresscommand...[flags]" filename
+sed -ir 's/fetchRemotePackage(REMOTE_PACKAGE_NAME/fetchRemotePackage("\/static\/dy_linking_runtime\/" + REMOTE_PACKAGE_NAME/g' dynLink.wasm.js
 
 cp ./dynLink.wasm.data ../../../../../static/dy_linking_runtime
 cp ./dynLink.wasm.js ../../../../../static/dy_linking_runtime
 cp ./dynLink.wasm.wasm ../../../../../static/dy_linking_runtime
-cp ./a.so ../../../../../static/dy_linking_runtime
