@@ -1,0 +1,12 @@
+interface Foo {
+    attribute long value;
+  void Foo();
+  long getVal();
+  void setVal(long v);
+};
+
+interface Bar {
+    attribute long value;
+  void Bar(long val);
+  void doSomething();
+};

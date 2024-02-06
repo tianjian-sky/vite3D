@@ -114,6 +114,22 @@ const router = createRouter({
             component: () => import('../views/WasmLinking.vue')
         },
         {
+            path: '/wasmMemory',
+            name: 'wasmMemory',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/WasmMemory.vue')
+        },
+        {
+            path: '/wasmIdl',
+            name: 'wasmIdl',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/WasmIdl.vue')
+        },
+        {
             path: '/bimFace',
             name: 'BimFace',
             // route level code-splitting

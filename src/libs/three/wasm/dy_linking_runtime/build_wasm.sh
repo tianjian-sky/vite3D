@@ -8,7 +8,7 @@
 
 
 ~/develop/emscripten-main/emcc ./lib/a.cpp  -c -o a.so -sSIDE_MODULE=2  -mnontrapping-fptoint  #-sEXPORTED_FUNCTIONS=_sayGoodBye,_sayHello,_sayHi # -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue 
-~/develop/emscripten-main/emcc -sMAIN_MODULE=2 ./main.cpp -o dynLink.wasm.js -mnontrapping-fptoint -sEXPORT_ES6=1  --preload-file . -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_main -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue --pre-js=pre.js  -sENVIRONMENT=web -sINITIAL_MEMORY=52428800
+~/develop/emscripten-main/emcc -sMAIN_MODULE=2 ./main.cpp -o dynLink.wasm.js -mnontrapping-fptoint -sEXPORT_ES6=1  --preload-file ./a.so -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_main -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue --pre-js=pre.js  -sENVIRONMENT=web -sINITIAL_MEMORY=52428800
 
 # node ./postProcess.js
 
