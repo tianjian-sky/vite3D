@@ -10,5 +10,6 @@ extern "C"
         sayHello();
         sayHi();
         sayGoodBye();
+        boostFn();
     }
 }

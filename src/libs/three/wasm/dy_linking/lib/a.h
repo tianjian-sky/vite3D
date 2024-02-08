@@ -7,6 +7,7 @@ extern "C"
     void EMSCRIPTEN_KEEPALIVE sayHello();
     void EMSCRIPTEN_KEEPALIVE sayHi();
     void EMSCRIPTEN_KEEPALIVE sayGoodBye();
+    void EMSCRIPTEN_KEEPALIVE boostFn();
 }
 
 #endif

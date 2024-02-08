@@ -22,8 +22,8 @@ import { GUI } from 'lil-gui'
 import { initWasm as initWasm1 } from '../libs/three/wasm/static_linking/install'
 import { initWasm as initWasm2 } from '../libs/three/wasm/dy_linking_full/install'
 import { initWasm as initWasm3 } from '../libs/three/wasm/dy_linking/install'
-import { initWasm as initWasm4 } from '../libs/three/wasm/dy_linking_runtime/install'
-import { initWasm as initWasm5 } from '../libs/three/wasm/dy_linking_runtim_embed/install'
+import { initWasm as initWasm4 } from '../libs/three/wasm/dy_linking_runtim_dlopen_preload-file/install.js'
+import { initWasm as initWasm5 } from '../libs/three/wasm/dy_linking_runtim_dlopen/install'
 
 
 defineOptions({
@@ -55,16 +55,16 @@ const modules = [
         fn: initWasm3
     },
     {
+        id: 5,
+        desc: '动态链接(runtime Dynamic Linking) dlopen',
+        path: '',
+        fn: initWasm5
+    },
+    {
         id: 4,
         desc: '动态链接(runtime Dynamic Linking) preload_file ',
         path: '',
         fn: initWasm4
-    },
-    {
-        id: 5,
-        desc: '动态链接(runtime Dynamic Linking) embed_file',
-        path: '',
-        fn: initWasm5
     }
 ]
 const currentType = ref(0)
@@ -73,10 +73,11 @@ const init = function () {
     if (!item || !item.fn) return
     item.fn(item.id).then(WASM => {
         window._WASM = WASM
-        console.log('wasm', WASM)
-        WASM.asm.say()
-        WASM.asm.sayHi && WASM.asm.sayHi()
-        WASM.asm.sayGoodBye && WASM.asm.sayGoodBye()
+        console.log('wasm', item.id, WASM)
+        WASM.asm.say && WASM.asm.say()
+        // WASM.asm.sayHi && WASM.asm.sayHi()
+        // WASM.asm.sayGoodBye && WASM.asm.sayGoodBye()
+        // WASM.asm.boostFn && WASM.asm.boostFn()
     })
 }
 

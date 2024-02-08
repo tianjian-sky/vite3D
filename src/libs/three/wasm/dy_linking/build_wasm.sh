@@ -17,8 +17,10 @@
 # [compile+link]
 # var SIDE_MODULE = 0;
 
-~/develop/emscripten-main/emcc ./lib/a.cpp  -c -o a.so -sSIDE_MODULE=2  -mnontrapping-fptoint  #-sEXPORTED_FUNCTIONS=_sayGoodBye,_sayHello,_sayHi # -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue 
-~/develop/emscripten-main/emcc -sMAIN_MODULE=2 ./main.cpp a.so  -o dynLink.wasm.js -mnontrapping-fptoint -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_sayGoodBye,_sayHello,_sayHi -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue -sINITIAL_MEMORY=52428800
+# ~/develop/emscripten-main/emcc --clear-cache
+
+~/develop/emscripten-main/emcc ./lib/a.cpp  -c -o a.so -sSIDE_MODULE=2  -mnontrapping-fptoint -I/usr/local/lib/boost  #-sEXPORTED_FUNCTIONS=_sayGoodBye,_sayHello,_sayHi # -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue 
+~/develop/emscripten-main/emcc -sMAIN_MODULE=2 ./main.cpp a.so  -o dynLink.wasm.js -mnontrapping-fptoint --pre-js=pre.js  -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_sayGoodBye,_sayHello,_sayHi,_boostFn -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue -sINITIAL_MEMORY=52428800
 
 cp ./dynLink.wasm.wasm ../../../../../static/dy_linking
 cp ./dynLink.wasm.js ../../../../../static/dy_linking

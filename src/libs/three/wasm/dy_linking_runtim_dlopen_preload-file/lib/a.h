@@ -7,6 +7,6 @@ extern "C"
     void sayHello();
     void sayHi();
     void sayGoodBye();
+    void boostFn();
 }
-
 #endif

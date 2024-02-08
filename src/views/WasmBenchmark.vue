@@ -90,7 +90,40 @@ const case4 = (wasm) => { //  using em_bind()
 
 const case7 = (wasm) => { // using em_bind() with value_array, value_object (array and object auto-convert)
     if (wasm) {
-        window._WASM.mat4MultiplyMat4_2.call(null, mat1.elements.concat(mat2.elements))
+        window._WASM.mat4MultiplyMat4_2.call(null, [
+            mat1.elements[0],
+            mat1.elements[1],
+            mat1.elements[2],
+            mat1.elements[3],
+            mat1.elements[4],
+            mat1.elements[5],
+            mat1.elements[6],
+            mat1.elements[7],
+            mat1.elements[8],
+            mat1.elements[9],
+            mat1.elements[10],
+            mat1.elements[11],
+            mat1.elements[12],
+            mat1.elements[13],
+            mat1.elements[14],
+            mat1.elements[15],
+            mat2.elements[0],
+            mat2.elements[1],
+            mat2.elements[2],
+            mat2.elements[3],
+            mat2.elements[4],
+            mat2.elements[5],
+            mat2.elements[6],
+            mat2.elements[7],
+            mat2.elements[8],
+            mat2.elements[9],
+            mat2.elements[10],
+            mat2.elements[11],
+            mat2.elements[12],
+            mat2.elements[13],
+            mat2.elements[14],
+            mat2.elements[15]
+        ])
     } else {
         mat1.multiply(mat2)
     }

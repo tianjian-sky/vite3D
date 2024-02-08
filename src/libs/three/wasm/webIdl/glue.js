@@ -264,3 +264,97 @@ Bar.prototype['doSomething'] = Bar.prototype.doSomething = /** @suppress {undefi
   var self = this.ptr;
   _emscripten_bind_Bar___destroy___0(self);
 };
+// Matrix4
+/** @suppress {undefinedVars, duplicate} @this{Object} */function Matrix4(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16) {
+  if (e1 && typeof e1 === 'object') e1 = e1.ptr;
+  if (e2 && typeof e2 === 'object') e2 = e2.ptr;
+  if (e3 && typeof e3 === 'object') e3 = e3.ptr;
+  if (e4 && typeof e4 === 'object') e4 = e4.ptr;
+  if (e5 && typeof e5 === 'object') e5 = e5.ptr;
+  if (e6 && typeof e6 === 'object') e6 = e6.ptr;
+  if (e7 && typeof e7 === 'object') e7 = e7.ptr;
+  if (e8 && typeof e8 === 'object') e8 = e8.ptr;
+  if (e9 && typeof e9 === 'object') e9 = e9.ptr;
+  if (e10 && typeof e10 === 'object') e10 = e10.ptr;
+  if (e11 && typeof e11 === 'object') e11 = e11.ptr;
+  if (e12 && typeof e12 === 'object') e12 = e12.ptr;
+  if (e13 && typeof e13 === 'object') e13 = e13.ptr;
+  if (e14 && typeof e14 === 'object') e14 = e14.ptr;
+  if (e15 && typeof e15 === 'object') e15 = e15.ptr;
+  if (e16 && typeof e16 === 'object') e16 = e16.ptr;
+  if (e1 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_0(); getCache(Matrix4)[this.ptr] = this;return }
+  if (e2 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_1(e1); getCache(Matrix4)[this.ptr] = this;return }
+  if (e3 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_2(e1, e2); getCache(Matrix4)[this.ptr] = this;return }
+  if (e4 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_3(e1, e2, e3); getCache(Matrix4)[this.ptr] = this;return }
+  if (e5 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_4(e1, e2, e3, e4); getCache(Matrix4)[this.ptr] = this;return }
+  if (e6 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_5(e1, e2, e3, e4, e5); getCache(Matrix4)[this.ptr] = this;return }
+  if (e7 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_6(e1, e2, e3, e4, e5, e6); getCache(Matrix4)[this.ptr] = this;return }
+  if (e8 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_7(e1, e2, e3, e4, e5, e6, e7); getCache(Matrix4)[this.ptr] = this;return }
+  if (e9 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_8(e1, e2, e3, e4, e5, e6, e7, e8); getCache(Matrix4)[this.ptr] = this;return }
+  if (e10 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_9(e1, e2, e3, e4, e5, e6, e7, e8, e9); getCache(Matrix4)[this.ptr] = this;return }
+  if (e11 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_10(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10); getCache(Matrix4)[this.ptr] = this;return }
+  if (e12 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_11(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11); getCache(Matrix4)[this.ptr] = this;return }
+  if (e13 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_12(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12); getCache(Matrix4)[this.ptr] = this;return }
+  if (e14 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_13(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13); getCache(Matrix4)[this.ptr] = this;return }
+  if (e15 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_14(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14); getCache(Matrix4)[this.ptr] = this;return }
+  if (e16 === undefined) { this.ptr = _emscripten_bind_Matrix4_Matrix4_15(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15); getCache(Matrix4)[this.ptr] = this;return }
+  this.ptr = _emscripten_bind_Matrix4_Matrix4_16(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16);
+  getCache(Matrix4)[this.ptr] = this;
+};;
+Matrix4.prototype = Object.create(WrapperObject.prototype);
+Matrix4.prototype.constructor = Matrix4;
+Matrix4.prototype.__class__ = Matrix4;
+Matrix4.__cache__ = {};
+Module['Matrix4'] = Matrix4;
+
+Matrix4.prototype['setElements'] = Matrix4.prototype.setElements = /** @suppress {undefinedVars, duplicate} @this{Object} */function(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16) {
+  var self = this.ptr;
+  if (e1 && typeof e1 === 'object') e1 = e1.ptr;
+  if (e2 && typeof e2 === 'object') e2 = e2.ptr;
+  if (e3 && typeof e3 === 'object') e3 = e3.ptr;
+  if (e4 && typeof e4 === 'object') e4 = e4.ptr;
+  if (e5 && typeof e5 === 'object') e5 = e5.ptr;
+  if (e6 && typeof e6 === 'object') e6 = e6.ptr;
+  if (e7 && typeof e7 === 'object') e7 = e7.ptr;
+  if (e8 && typeof e8 === 'object') e8 = e8.ptr;
+  if (e9 && typeof e9 === 'object') e9 = e9.ptr;
+  if (e10 && typeof e10 === 'object') e10 = e10.ptr;
+  if (e11 && typeof e11 === 'object') e11 = e11.ptr;
+  if (e12 && typeof e12 === 'object') e12 = e12.ptr;
+  if (e13 && typeof e13 === 'object') e13 = e13.ptr;
+  if (e14 && typeof e14 === 'object') e14 = e14.ptr;
+  if (e15 && typeof e15 === 'object') e15 = e15.ptr;
+  if (e16 && typeof e16 === 'object') e16 = e16.ptr;
+  _emscripten_bind_Matrix4_setElements_16(self, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16);
+};;
+
+Matrix4.prototype['getElement'] = Matrix4.prototype.getElement = /** @suppress {undefinedVars, duplicate} @this{Object} */function(index) {
+  var self = this.ptr;
+  if (index && typeof index === 'object') index = index.ptr;
+  return _emscripten_bind_Matrix4_getElement_1(self, index);
+};;
+
+Matrix4.prototype['multiply'] = Matrix4.prototype.multiply = /** @suppress {undefinedVars, duplicate} @this{Object} */function(a, b) {
+  var self = this.ptr;
+  if (a && typeof a === 'object') a = a.ptr;
+  if (b && typeof b === 'object') b = b.ptr;
+  _emscripten_bind_Matrix4_multiply_2(self, a, b);
+};;
+
+  Matrix4.prototype['get_elements'] = Matrix4.prototype.get_elements = /** @suppress {undefinedVars, duplicate} @this{Object} */function(arg0) {
+  var self = this.ptr;
+  if (arg0 && typeof arg0 === 'object') arg0 = arg0.ptr;
+  return _emscripten_bind_Matrix4_get_elements_1(self, arg0);
+};
+    Matrix4.prototype['set_elements'] = Matrix4.prototype.set_elements = /** @suppress {undefinedVars, duplicate} @this{Object} */function(arg0, arg1) {
+  var self = this.ptr;
+  ensureCache.prepare();
+  if (arg0 && typeof arg0 === 'object') arg0 = arg0.ptr;
+  if (arg1 && typeof arg1 === 'object') arg1 = arg1.ptr;
+  _emscripten_bind_Matrix4_set_elements_2(self, arg0, arg1);
+};
+    Object.defineProperty(Matrix4.prototype, 'elements', { get: Matrix4.prototype.get_elements, set: Matrix4.prototype.set_elements });
+  Matrix4.prototype['__destroy__'] = Matrix4.prototype.__destroy__ = /** @suppress {undefinedVars, duplicate} @this{Object} */function() {
+  var self = this.ptr;
+  _emscripten_bind_Matrix4___destroy___0(self);
+};
