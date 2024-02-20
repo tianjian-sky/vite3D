@@ -1,10 +1,12 @@
-import WasmInit from './three.wasm'
-
-export const initWasm = () => {
+export const initWasm = (type) => {
     const p = new Promise((resolve, reject) => {
-        WasmInit({ __jsRegisters: {} }).then(WASM => {
-            resolve(WASM)
-        })
+        import('../../../../static/three.wasm.js')
+            .then(res => {
+                console.log('initWasm', res)
+                res.default({ __jsRegisters: {} }).then(WASM => {
+                    resolve(WASM)
+                })
+            })
     })
     return p
 }
