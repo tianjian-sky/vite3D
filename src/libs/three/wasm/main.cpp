@@ -1,10 +1,15 @@
 #include <iostream>
 #include <stdlib.h>
 #include <array>
+#include <cmath>
+#include <string>
+#include <vector>
+#include <map>
 #include <emscripten/emscripten.h>
 #include <emscripten/bind.h>
 #include <emscripten/console.h>
 #include <emscripten/val.h>
+#include <cstring>
 
 using namespace std;
 
@@ -197,7 +202,7 @@ void mat4MultiplyMat4_3(FloatPointers2 mats)
     float *mat2 = mats.p1;
     // float *mat1;
     // float *mat2;
-    cout << mats.p0 << ":" << mats.p1 << endl;
+    // cout << mats.p0 << ":" << mats.p1 << endl;
     // mat1 = mats.p0;
     // mat2 = mats.p1;
     const float a11 = mat1[0];
@@ -249,6 +254,60 @@ void mat4MultiplyMat4_3(FloatPointers2 mats)
     res[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
     res[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
     // return res;
+}
+
+std::array<float, 16> &mat4MultiplyMat4_5(
+    float a11,
+    float a21,
+    float a31,
+    float a41,
+    float a12,
+    float a22,
+    float a32,
+    float a42,
+    float a13,
+    float a23,
+    float a33,
+    float a43,
+    float a14,
+    float a24,
+    float a34,
+    float a44,
+    float b11,
+    float b21,
+    float b31,
+    float b41,
+    float b12,
+    float b22,
+    float b32,
+    float b42,
+    float b13,
+    float b23,
+    float b33,
+    float b43,
+    float b14,
+    float b24,
+    float b34,
+    float b44)
+{
+    std::array<float, 16> res;
+    res[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
+    res[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
+    res[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
+    res[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
+    res[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
+    res[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
+    res[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
+    res[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
+    res[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
+    res[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
+    res[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
+    res[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
+    res[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
+    res[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
+    res[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
+    res[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
+    return res;
 }
 
 /**
@@ -312,45 +371,9 @@ EMSCRIPTEN_BINDINGS(mat4)
         .element(emscripten::index<14>())
         .element(emscripten::index<15>());
     emscripten::function("mat4MultiplyMat4_2", &mat4MultiplyMat4_2);
+    emscripten::function("mat4MultiplyMat4_5", &mat4MultiplyMat4_5);
     // emscripten::function("mat4MultiplyMat4_3", &mat4MultiplyMat4_3, emscripten::allow_raw_pointers());
 }
-
-// static void embind_init_mat4();
-// static struct EmBindInit_mat4 : emscripten::internal::InitFunc
-// {
-//     EmBindInit_mat4() : InitFunc(embind_init_mat4) {}
-// } EmBindInit_mat4_instance;
-// static void embind_init_mat4()
-// {
-//     emscripten::value_array<Matrix4f4f>("Matrix4f4f").element(&Matrix4f4f::a0);
-//     emscripten::value_array<std::array<float, 16>>("ArrayMat4").element(emscripten::index<0>());
-//     emscripten::function("mat4MultiplyMat4_2", &mat4MultiplyMat4_2);
-// }
-
-// EMSCRIPTEN_BINDINGS(mat4V2)
-// {
-//     emscripten::value_array<FloatPointers2>("FloatPointers2")
-//         .element(&FloatPointers2::p0)
-//         .element(&FloatPointers2::p1);
-//     // emscripten::value_array<std::array<float, 16>>("jsArray16")
-//     //     .element(emscripten::index<0>())
-//     //     .element(emscripten::index<1>())
-//     //     .element(emscripten::index<2>())
-//     //     .element(emscripten::index<3>())
-//     //     .element(emscripten::index<4>())
-//     //     .element(emscripten::index<5>())
-//     //     .element(emscripten::index<6>())
-//     //     .element(emscripten::index<7>())
-//     //     .element(emscripten::index<8>())
-//     //     .element(emscripten::index<9>())
-//     //     .element(emscripten::index<10>())
-//     //     .element(emscripten::index<11>())
-//     //     .element(emscripten::index<12>())
-//     //     .element(emscripten::index<13>())
-//     //     .element(emscripten::index<14>())
-//     //     .element(emscripten::index<15>());
-//     emscripten::function("mat4MultiplyMat4_3", &mat4MultiplyMat4_3, emscripten::allow_raw_pointers());
-// }
 
 extern "C"
 {
@@ -408,17 +431,6 @@ extern "C"
         return res;
     }
 
-    void runJs2()
-    {
-        emscripten_run_script("console.log('runJs1')");
-        int x = EM_ASM_INT({
-            console.log('I received: ' + $0);
-            return $0 + 1;
-        },
-                           100);
-        printf("%d\n", x);
-    }
-
     // c 调 js
     void mat4MultiplyMat4CallJs()
     {
@@ -459,9 +471,15 @@ extern "C"
     // share buffer
     void vec3MultiplyMat4(float *vec3, float *mat4)
     {
-        const float x = vec3[0], y = vec3[1], z = vec3[2];
-        // cout << "a:" << vec3[0] << ":" << vec3[1] << ":" << vec3[2] << endl;
-        // cout << "b:" << mat4[0] << ":" << mat4[1] << ":" << mat4[2] << mat4[3] << ":" << mat4[4] << ":" << mat4[5] << mat4[6] << ":" << mat4[7] << ":" << mat4[8] << endl;
+        const float x = vec3[0];
+        const float y = vec3[1];
+        const float z = vec3[2];
+        // cout << "b:" << endl;
+        // for (int i = 0; i < 16; i++)
+        // {
+        //     cout << mat4[i] << ":";
+        // }
+        // cout << endl;
         const float w = 1 / (mat4[3] * x + mat4[7] * y + mat4[11] * z + mat4[15]);
         vec3[0] = (mat4[0] * x + mat4[4] * y + mat4[8] * z + mat4[12]) * w;
         vec3[1] = (mat4[1] * x + mat4[5] * y + mat4[9] * z + mat4[13]) * w;
@@ -521,14 +539,13 @@ extern "C"
         res[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
     }
 
-    void EMSCRIPTEN_KEEPALIVE matrixComposeReturnVoid(float *mat, float px, float py, float pz, float qx, float qy, float qz, float qw, float _sx, float _sy, float _sz)
+    void EMSCRIPTEN_KEEPALIVE matrixComposeReturnVoid(float *mat, float px, float py, float pz, float qx, float qy, float qz, float qw, float sx, float sy, float sz)
     {
         const float x = qx, y = qy, z = qz, w = qw;
         const float x2 = x + x, y2 = y + y, z2 = z + z;
         const float xx = x * x2, xy = x * y2, xz = x * z2;
         const float yy = y * y2, yz = y * z2, zz = z * z2;
         const float wx = w * x2, wy = w * y2, wz = w * z2;
-        const float sx = _sx, sy = _sy, sz = _sz;
         mat[0] = (1 - (yy + zz)) * sx;
         mat[1] = (xy + wz) * sx;
         mat[2] = (xz - wy) * sx;
@@ -582,7 +599,6 @@ std::vector<float> mat4MultiplyMat4CallByVal()
     const std::vector<float> &a = emscripten::convertJSArrayToNumberVector<float>(emscripten::val::global("__registerMat4Multiply1"));
     const std::vector<float> &b = emscripten::convertJSArrayToNumberVector<float>(emscripten::val::global("__registerMat4Multiply2"));
     const std::vector<float> &res = emscripten::convertJSArrayToNumberVector<float>(emscripten::val::global("__registerMat4Multiply"));
-    cout << a.size() << ": " << b.size() << ":" << res.size() << endl;
     const float a11 = a[0];
     const float a12 = a[4];
     const float a13 = a[8];
@@ -637,4 +653,271 @@ std::vector<float> mat4MultiplyMat4CallByVal()
 EMSCRIPTEN_BINDINGS(test_bindings)
 {
     emscripten::function("mat4MultiplyMat4CallByVal", &mat4MultiplyMat4CallByVal, emscripten::allow_raw_pointers());
+}
+
+class Vector3
+{
+public:
+    float x;
+    float y;
+    float z;
+    Vector3(){};
+    Vector3(float _x, float _y, float _z) : x(_x), y(_y), z(_z){};
+    void subVectors(Vector3 *a, Vector3 *b)
+    {
+        x = a->x - b->x;
+        y = a->y - b->y;
+        z = a->z - b->z;
+    }
+    Vector3 *set(float _x, float _y, float _z)
+    {
+        x = _x;
+        y = _y;
+        z = _z;
+        return this;
+    }
+    void cross(Vector3 *vec)
+    {
+        const float ax = x, ay = y, az = z;
+        const float bx = vec->x, by = vec->y, bz = vec->z;
+        x = ay * bz - az * by;
+        y = az * bx - ax * bz;
+        z = ax * by - ay * bx;
+    }
+    float dot(Vector3 v)
+    {
+        return x * v.x + y * v.y + z * v.z;
+    }
+    float lengthSq()
+    {
+        return x * x + y * y + z * z;
+    }
+    Vector3 *multiplyScalar(float scalar)
+    {
+        x *= scalar;
+        y *= scalar;
+        z *= scalar;
+        return this;
+    }
+};
+
+class Triangle
+{
+public:
+    Vector3 *a;
+    Vector3 *b;
+    Vector3 *c;
+    Triangle()
+    {
+        a = new Vector3();
+        b = new Vector3();
+        c = new Vector3();
+    }
+    ~Triangle()
+    {
+        if (a != nullptr)
+            delete a;
+        if (b != nullptr)
+            delete b;
+        if (c != nullptr)
+            delete c;
+    }
+    void getNormal(Vector3 &normal)
+    {
+        Vector3 target;
+        Vector3 _v0$1;
+        target.subVectors(c, b);
+        _v0$1.subVectors(a, b);
+        target.cross(&_v0$1);
+        const float targetLengthSq = target.lengthSq();
+        if (targetLengthSq > 0)
+        {
+            target.multiplyScalar(1 / sqrt(targetLengthSq));
+        }
+        else
+        {
+            target.set(0, 0, 0);
+        }
+        normal.set(target.x, target.y, target.z);
+    }
+    Vector3 *operator[](char ch)
+    {
+        if (ch == 'a')
+            return this->a;
+        if (ch == 'b')
+            return this->b;
+        if (ch == 'c')
+            return this->c;
+    }
+};
+
+struct EdgeDataRecord
+{
+    int index0;
+    int index1;
+    Vector3 normal;
+};
+
+float getAttrEl(float *view, int index, int offset, int itemSize)
+{
+    float x = *(view + index * itemSize + offset);
+    return x;
+}
+
+void fromBufferAttribute(Vector3 *vec, float *view, int index, int itemSize)
+{
+    vec->x = getAttrEl(view, index, 0, 3);
+    vec->y = getAttrEl(view, index, 1, 3);
+    vec->z = getAttrEl(view, index, 2, 3);
+}
+
+extern "C"
+{
+    float *getEdgeGeomVertices(float *arr, float *indices, int size1 = -1, int size2 = -1)
+    {
+        float *output;
+        Vector3 *_v0 = new Vector3();
+        Vector3 *_v1 = new Vector3();
+        Triangle _triangle;
+        Vector3 _normal;
+        char vertKeys[] = {'a', 'b', 'c'};
+
+        const float precisionPoints = 4;
+        const float precision = pow(10.0, precisionPoints);
+        const float thresholdDot = cos(0.017453292519943295 * 30);
+        int indexArr[3];
+        string hashes[3];
+        const int indexCount = size2 > 0 ? size2 : size1 / 3;
+
+        map<string, EdgeDataRecord *> edgeData;
+        vector<float> vertices;
+        // float temp[];
+        int outputLen = 0;
+        int outputLen2 = 0;
+        for (int i = 0; i < indexCount; i += 3)
+        {
+            if (indices != NULL)
+            {
+
+                indexArr[0] = getAttrEl(indices, i, 0, 1);
+                indexArr[1] = getAttrEl(indices, i + 1, 0, 1);
+                indexArr[2] = getAttrEl(indices, i + 2, 0, 1);
+            }
+            else
+            {
+
+                indexArr[0] = i;
+                indexArr[1] = i + 1;
+                indexArr[2] = i + 2;
+            }
+            fromBufferAttribute(_triangle.a, arr, indexArr[0], 3);
+            fromBufferAttribute(_triangle.b, arr, indexArr[1], 3);
+            fromBufferAttribute(_triangle.c, arr, indexArr[2], 3);
+            _triangle.getNormal(_normal);
+            // create hashes for the edge from the vertices
+            hashes[0] = to_string(round(_triangle.a->x * precision)) + "," + to_string(round(_triangle.a->y * precision)) + "," + to_string(round(_triangle.a->z * precision));
+            hashes[1] = to_string(round(_triangle.b->x * precision)) + "," + to_string(round(_triangle.b->y * precision)) + "," + to_string(round(_triangle.b->z * precision));
+            hashes[2] = to_string(round(_triangle.c->x * precision)) + "," + to_string(round(_triangle.c->y * precision)) + "," + to_string(round(_triangle.c->z * precision));
+            // cout << hashes[0] << ": " << hashes[1] << ":" << hashes[2] << endl;
+            // skip degenerate triangles
+            if (hashes[0] == hashes[1] || hashes[1] == hashes[2] || hashes[2] == hashes[0])
+            {
+                continue;
+            }
+
+            // iterate over every edge
+            for (int j = 0; j < 3; j++)
+            {
+                // get the first and next vertex making up the edge
+                const int jNext = (j + 1) % 3;
+                const string vecHash0 = hashes[j];
+                const string vecHash1 = hashes[jNext];
+                const Vector3 *v0 = _triangle[vertKeys[j]];
+                const Vector3 *v1 = _triangle[vertKeys[jNext]];
+
+                const string hash = vecHash0 + "_" + vecHash1;
+                const string reverseHash = vecHash1 + "_" + vecHash0;
+
+                if (edgeData.find(reverseHash) != edgeData.end() && edgeData[reverseHash] != NULL)
+                {
+                    // cout << "del ptr:" << reverseHash << endl;
+                    if (_normal.dot(edgeData[reverseHash]->normal) <= thresholdDot)
+                    {
+                        vertices.emplace_back(v0->x);
+                        vertices.emplace_back(v0->y);
+                        vertices.emplace_back(v0->z);
+                        vertices.emplace_back(v1->x);
+                        vertices.emplace_back(v1->y);
+                        vertices.emplace_back(v1->z);
+                        // temp.push(v0->x);
+                        // temp.push(v0->y);
+                        // temp.push(v0->z);
+                        // temp.push(v1->x);
+                        // temp.push(v1->y);
+                        // temp.push(v1->z);
+                        outputLen++;
+                    }
+                    delete edgeData[reverseHash];
+                    // edgeData.erase(reverseHash);
+                    edgeData[reverseHash] = NULL;
+                    outputLen2--;
+                }
+                else if (edgeData.find(hash) == edgeData.end())
+                {
+                    EdgeDataRecord *edc = new EdgeDataRecord();
+                    edc->index0 = indexArr[j];
+                    edc->index1 = indexArr[jNext];
+                    edc->normal = _normal;
+                    edgeData[hash] = edc;
+                    outputLen2++;
+                    // cout << "add ptr:" << hash << endl;
+                }
+            }
+        }
+        // cout << "edge size:" << edgeData.size() << edgeData.size() * 6 << endl;
+        // float *outputArr = new float[outputLen * 6 + 1 + outputLen2 * 6];
+        // *outputArr = outputLen * 6 + 1 + outputLen2 * 6;
+        // int index = 1 + outputLen * 6;
+        // memcpy((outputArr + 1), &temp, sizeof(temp));
+        for (map<string, EdgeDataRecord *>::iterator it = edgeData.begin(); it != edgeData.end(); it++)
+        {
+            // cout << it->first << ":" << it->second << endl;
+            if (it->second != NULL)
+            {
+                // cout << it->second->index0 << ":" << it->second->index1 << endl;
+                fromBufferAttribute(_v0, arr, it->second->index0, 3);
+                fromBufferAttribute(_v1, arr, it->second->index1, 3);
+                vertices.emplace_back(_v0->x);
+                vertices.emplace_back(_v0->y);
+                vertices.emplace_back(_v0->z);
+                vertices.emplace_back(_v1->x);
+                vertices.emplace_back(_v1->y);
+                vertices.emplace_back(_v1->z);
+
+                // *(outputArr + index) = _v0->x;
+                // *(outputArr + 1 + index) = _v0->y;
+                // *(outputArr + 2 + index) = _v0->z;
+                // *(outputArr + 3 + index) = _v1->x;
+                // *(outputArr + 4 + index) = _v1->y;
+                // *(outputArr + 5 + index) = _v1->x;
+                // index += 6;
+                // cout << _v0->x << ":" << _v0->y << ":" << _v0->z << endl;
+                // cout << _v1->x << ":" << _v1->y << ":" << _v1->z << endl;
+                delete it->second;
+            }
+            // cout << "s:" << _v0->x << ":" << _v0->y << ":" << _v0->z << endl;
+            // cout << "s2:" << _v1->x << ":" << _v1->y << ":" << _v1->z << endl;
+        }
+        // for (int i = 0; i < vertices.size(); i++)
+        // {
+        //     cout << vertices.at(i) << ",";
+        // }
+        // cout << "vertices size:" << vertices.size() << endl;
+        vertices.insert(vertices.begin(), vertices.size());
+        delete _v0;
+        delete _v1;
+        output = vertices.data();
+        return output;
+        // return outputArr;
+    }
 }
