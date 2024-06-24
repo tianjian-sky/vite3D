@@ -24,6 +24,7 @@
         "autoprefixer": "^10.4.14",
         "babylonjs": "^5.53.0",
         "babylonjs-loaders": "^5.53.1",
+        "cannon-es": "^0.20.0",
         "canvas-datagrid": "^0.4.6",
         "cross-env": "^7.0.3",
         "exceljs": "^4.3.0",
