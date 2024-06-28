@@ -82,6 +82,31 @@ const router = createRouter({
             component: () => import('../views/Octree.vue')
         },
         {
+            path: '/physics-cannon-es',
+            name: 'phusicsCannonEs',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/physics/CannonEs.vue')
+        },
+        {
+            path: '/physics-ammo-js',
+            name: 'phsicsAmmojs',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/physics/AmmoJs.vue')
+        }
+        // ,
+        // {
+        //     path: '/babylonOctree',
+        //     name: 'babylonOctree',
+        //     // route level code-splitting
+        //     // this generates a separate chunk (About.[hash].js) for this route
+        //     // which is lazy-loaded when the route is visited.
+        //     component: () => import('../views/BabylonOctree.vue')
+        // },
+        {
             path: '/wasmBenchmark',
             name: 'WasmBenchMark',
             // route level code-splitting
@@ -145,6 +170,23 @@ const router = createRouter({
             // which is lazy-loaded when the route is visited.
             component: () => import('../views/GltfLoader.vue')
         }
+        // ,
+        // {
+        //     path: '/renderPass',
+        //     name: 'renderPass',
+        //     // route level code-splitting
+        //     // this generates a separate chunk (About.[hash].js) for this route
+        //     // which is lazy-loaded when the route is visited.
+        //     component: () => import('../views/RenderPass.vue')
+        // },
+        // {
+        //     path: '/outline',
+        //     name: 'outline',
+        //     // route level code-splitting
+        //     // this generates a separate chunk (About.[hash].js) for this route
+        //     // which is lazy-loaded when the route is visited.
+        //     component: () => import('../views/Outline.vue')
+        // }
     ]
 })
 
