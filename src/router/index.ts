@@ -96,7 +96,23 @@ const router = createRouter({
             // this generates a separate chunk (About.[hash].js) for this route
             // which is lazy-loaded when the route is visited.
             component: () => import('../views/physics/AmmoJs.vue')
-        }
+        },
+        {
+            path: '/physics-oimo',
+            name: 'phsicsOimo',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/physics/Oimo.vue')
+        },
+        {
+            path: '/physics-jolt',
+            name: 'phsicsJolt',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/physics/Jolt.vue')
+        },
         // ,
         // {
         //     path: '/babylonOctree',
