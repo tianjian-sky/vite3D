@@ -82,6 +82,14 @@ const router = createRouter({
             component: () => import('../views/Octree.vue')
         },
         {
+            path: '/projectOnPlane',
+            name: 'projectOnPlane',
+            // route level code-splitting
+            // this generates a separate chunk (About.[hash].js) for this route
+            // which is lazy-loaded when the route is visited.
+            component: () => import('../views/ProjectOnPlane.vue')
+        },
+        {
             path: '/physics-cannon-es',
             name: 'phusicsCannonEs',
             // route level code-splitting
