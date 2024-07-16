@@ -8,6 +8,7 @@ import {
 import * as THREE from 'three'
 import * as Ammo from 'ammo.js'
 
+const clock = new THREE.Clock()
 const roundFractional = function (x, n) {
     return Math.round(x * Math.pow(10, n)) / Math.pow(10, n);
 }
@@ -294,6 +295,7 @@ class AmmoJsControls extends EventDispatcher {
     update() {
         const time = performance.now()
         const delta = (time - this.move.prevTime) / 1000
+        const dt = clock.getDelta();
         if (this.enabled === true) {
             this.move.displacement.x = 0
             this.move.displacement.y = 0
@@ -336,9 +338,7 @@ class AmmoJsControls extends EventDispatcher {
 
         // 物理引擎计算物体位置
         {
-            // this.world.step(1 / 60, delta)
-            // Step world
-            this.world.stepSimulation(delta, 10);
+            this.world.stepSimulation( dt, 10 );
             // Update rigid bodies
             for (var i = 0, il = this.moveObjs.length; i < il; i++) {
                 var objThree = this.moveObjs[i];
@@ -350,6 +350,7 @@ class AmmoJsControls extends EventDispatcher {
                     const q = transformAux1.getRotation();
                     objThree.position.set(p.x(), p.y(), p.z());
                     objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
+                    // console.log(p.x(), p.y(), p.z(), this.world, dt)
                 }
             }
         }

@@ -12,7 +12,7 @@ import Stats from '../../libs/three/stats.module.js'
 import { GLTFLoader } from '../../libs/three/loaders/GLTFLoader.js'
 import { AmmoJsControls } from '../../libs/three/AmmoJsControls.js'
 import { GUI } from 'lil-gui'
-import * as Ammo from 'ammo.js'
+// import * as Ammo from '../../libs/physics/ammo/ammo'
 defineOptions({
     name: 'Ammo-ES'
 })
@@ -51,7 +51,6 @@ function createRigidBody(threeObject, physicsShape, mass, pos, quat, addToScene 
         // Disable deactivation
         body.setActivationState(4);
     }
-    world.addRigidBody(body)
     return body
 }
 function createParalellepiped(sx, sy, sz, mass, pos, quat, material, margin = 0.05) {
@@ -98,13 +97,16 @@ const init = function () {
         // load the bunny
         const loader = new GLTFLoader();
         // loader.load( '/static/models/large/0932ab4b12e140c3ac7da3104cb2a637.skp.gltf', object => {
-        loader.load('/static/models/school/main.gltf', object => {
-            object.scene.rotateX(-.5 * Math.PI)
-            scene.add(object.scene)
-            initPhysics(object.scene)
-            controls = new AmmoJsControls(scene, camera, renderer.domElement, target, world, rigidBodies, {})
-            controls.toggleCollisionDetect(true)
-            animate()
+            loader.load('/static/models/2 (1)/main.gltf', object => {
+            Ammo().then(_Ammo => {
+                Ammo = _Ammo
+                object.scene.rotateX(-.5 * Math.PI)
+                scene.add(object.scene)
+                initPhysics(object.scene)
+                controls = new AmmoJsControls(scene, camera, renderer.domElement, target, world, rigidBodies, {})
+                controls.toggleCollisionDetect(true)
+                animate()
+            })
         })
         // set up gui
         const gui = new GUI();
@@ -123,56 +125,61 @@ const init = function () {
         const pos = new THREE.Vector3();
         const quat = new THREE.Quaternion();
         // Ground
-        pos.set(0, -1, 0)
+        pos.set(0, 0, 0)
         quat.set(0, 0, 0, 1)
         const ground = createParalellepiped(10000, 1, 10000, 0, pos, quat, new THREE.MeshPhongMaterial({ color: 0xcccccc }))
         ground.castShadow = true
         ground.receiveShadow = true
 
         // 1. 对每个mesh添加boxShape
-        model.traverse(mesh => {
-            if (mesh.isMesh) {
-                const bbox = mesh.geometry.boundingBox
-                const boxSize = bbox.getSize(new THREE.Vector3())
-                const pos = mesh.localToWorld(new THREE.Vector3())
-                const quat = mesh.quaternion.clone()
-                const shape = new Ammo.btBoxShape(new Ammo.btVector3(boxSize.x * 0.5, boxSize.y * 0.5, boxSize.z * 0.5))
-                createRigidBody(mesh, shape, 0, pos, quat, false)
-            }
-        })
-        // 2.对每个mesh添加btTriangleMesh
         // model.traverse(mesh => {
         //     if (mesh.isMesh) {
-        //         const btMesh = new Ammo.btTriangleMesh()
-        //         const _addMesh = (i, btMesh) => {
-        //             const p0 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i), mesh.geometry.attributes.position.getY(i), mesh.geometry.attributes.position.getZ(i))
-        //             const p1 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i + 1), mesh.geometry.attributes.position.getY(i + 1), mesh.geometry.attributes.position.getZ(i + 1))
-        //             const p2 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i + 2), mesh.geometry.attributes.position.getY(i + 2), mesh.geometry.attributes.position.getZ(i + 2))
-        //             btMesh.addTriangle(p0, p1, p2, false)
-        //         }
-        //         if (mesh.geometry.index) {
-        //             for (let i = 0; i < mesh.geometry.index.count; i += 3) {
-        //                 _addMesh(i, btMesh)
-        //             }
-        //         } else {
-        //             for (let i = 0; i < mesh.geometry.attributes.position.count; i += 3) {
-        //                 _addMesh(i, btMesh)
-        //             }
-        //         }
-        //         const meshShape = new Ammo.btConvexTriangleMeshShape(btMesh, false)
-        //         const transform = new Ammo.btTransform();
-        //         transform.setIdentity();
-        //         // transform.setOrigin(new Ammo.btVector3(mesh.position.x, mesh.position.y, mesh.position.z));
-        //         // transform.setRotation(new Ammo.btQuaternion(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w));
-        //         const motionState = new Ammo.btDefaultMotionState(transform);
-        //         const localInertia = new Ammo.btVector3(0, 0, 0);
-        //         meshShape.calculateLocalInertia(0, localInertia);
-        //         const rbInfo = new Ammo.btRigidBodyConstructionInfo(0, motionState, meshShape, localInertia);
-        //         const body = new Ammo.btRigidBody(rbInfo)
-        //         mesh.userData.physicsBody = body
-        //         world.addRigidBody(body)
+        //         const bbox = mesh.geometry.boundingBox
+        //         const boxSize = bbox.getSize(new THREE.Vector3())
+        //         const pos = mesh.localToWorld(new THREE.Vector3())
+        //         const quat = mesh.getWorldQuaternion().clone()
+        //         const shape = new Ammo.btBoxShape(new Ammo.btVector3(boxSize.x * 0.5, boxSize.y * 0.5, boxSize.z * 0.5))
+        //         createRigidBody(mesh, shape, 0, pos, quat, false)
         //     }
         // })
+        // 2.对每个mesh添加btTriangleMesh
+        model.traverse(mesh => {
+            if (mesh.isMesh) {
+                const btMesh = new Ammo.btTriangleMesh()
+                if (mesh.geometry.index) {
+                    for (let i = 0; i < mesh.geometry.index.count; i += 3) {
+                        const _i = mesh.geometry.index.getX(i)
+                        const p0 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(_i), mesh.geometry.attributes.position.getY(_i), mesh.geometry.attributes.position.getZ(_i))
+                        const p1 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(_i + 1), mesh.geometry.attributes.position.getY(_i + 1), mesh.geometry.attributes.position.getZ(_i + 1))
+                        const p2 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(_i + 2), mesh.geometry.attributes.position.getY(_i + 2), mesh.geometry.attributes.position.getZ(_i + 2))
+                        btMesh.addTriangle(p0, p1, p2, false)
+                    }
+                } else {
+                    for (let i = 0; i < mesh.geometry.attributes.position.count; i += 3) {
+                        const p0 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i), mesh.geometry.attributes.position.getY(i), mesh.geometry.attributes.position.getZ(i))
+                        const p1 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i + 1), mesh.geometry.attributes.position.getY(i + 1), mesh.geometry.attributes.position.getZ(i + 1))
+                        const p2 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i + 2), mesh.geometry.attributes.position.getY(i + 2), mesh.geometry.attributes.position.getZ(i + 2))
+                        btMesh.addTriangle(p0, p1, p2, false)
+                    }
+                }
+                const meshShape = new Ammo.btGImpactMeshShape(btMesh); // 使用btGImpactMeshShape
+                // meshShape.setMargin(0.01);
+                // meshShape.setLocalScaling(new Ammo.btVector3(scale.x, scale.y, scale.z));
+                meshShape.updateBound();
+                // transform.setIdentity();
+                const pos = mesh.getWorldPosition(new THREE.Vector3())
+                const quat = mesh.getWorldQuaternion()
+                transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+                transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+                const motionState = new Ammo.btDefaultMotionState(transform);
+                const localInertia = new Ammo.btVector3(0, 0, 0);
+                meshShape.calculateLocalInertia(0, localInertia);
+                const rbInfo = new Ammo.btRigidBodyConstructionInfo(0, motionState, meshShape, localInertia);
+                const body = new Ammo.btRigidBody(rbInfo)
+                mesh.userData.physicsBody = body
+                world.addRigidBody(body)
+            }
+        })
 
         // 2. 对每个
 
@@ -196,9 +203,10 @@ const init = function () {
         const meshShape = new Ammo.btConvexTriangleMeshShape(btMesh, false)
 
         const transform = new Ammo.btTransform();
-        transform.setIdentity();
-        // transform.setOrigin(new Ammo.btVector3(mesh.position.x, mesh.position.y, mesh.position.z));
-        // transform.setRotation(new Ammo.btQuaternion(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w));
+        const pos = mesh.getWorldPosition(new THREE.Vector3())
+        const quat = mesh.getWorldQuaternion(new THREE.Quaternion())
+        transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+        transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
         const motionState = new Ammo.btDefaultMotionState(transform);
         const localInertia = new Ammo.btVector3(0, 0, 0);
         meshShape.calculateLocalInertia(0, localInertia);
@@ -244,7 +252,6 @@ function fire() {
     pos.y = camera.position.y + shootDirection.y
     pos.z = camera.position.z + shootDirection.z
     const quat = new THREE.Quaternion()
-    console.log(pos, quat)
     const geometry = new THREE.SphereGeometry(0.5, 32, 32);
     const material = new THREE.MeshBasicMaterial({ color: 0xffcccc });
     const threeObject = new THREE.Mesh(geometry, material)
@@ -260,6 +267,7 @@ function fire() {
     threeObject.castShadow = true
     threeObject.receiveShadow = true
     body.setLinearVelocity(new Ammo.btVector3(velocity.x, velocity.y, velocity.z))
+    world.addRigidBody(body)
 }
 const resizeFn = function () {
     camera.aspect = window.innerWidth / window.innerHeight;

@@ -123,7 +123,7 @@ const init = function () {
                 const boxShape = new CANNON.Box(halfExtents)
                 boxBody.addShape(boxShape)
                 boxBody.position.copy(mesh.localToWorld(new THREE.Vector3()))
-                boxBody.quaternion.copy(mesh.quaternion)
+                boxBody.quaternion.copy(mesh.getWorldQuaternion(new THREE.Quaternion()))
                 world.addBody(boxBody)
             }
         })

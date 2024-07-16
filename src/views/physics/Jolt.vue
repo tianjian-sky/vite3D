@@ -6,13 +6,15 @@
 </template>
 
 <script setup lang="ts">
+
 import { onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
 import Stats from '../../libs/three/stats.module.js'
 import { GLTFLoader } from '../../libs/three/loaders/GLTFLoader.js'
 import { JoltControls } from '../../libs/three/JoltControls'
 import { GUI } from 'lil-gui'
-import initJolt from '../../libs/physics/jolt/jolt-physics.wasm.js'
+import initJolt from '/static/physics/jolt/jolt-physics.wasm.js'
+// import initJolt from '../../libs/physics/jolt/jolt-physics.wasm.js'
 console.log('import.meta.url', import.meta.url)
 
 defineOptions({
@@ -80,25 +82,77 @@ function createSphere(position, radius, motionType, layer, color = 0xffffff) {
     return body;
 }
 
-function createMeshForShape(shape) {
-    // Get triangle data
-    let scale = new Jolt.Vec3(1, 1, 1);
-    let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
-    Jolt.destroy(scale);
-
-    // Get a view on the triangle data (does not make a copy)
-    let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
-
-    // Now move the triangle data to a buffer and clone it so that we can free the memory from the C++ heap (which could be limited in size)
-    let buffer = new THREE.BufferAttribute(vertices, 3).clone();
-    Jolt.destroy(triContext);
-
-    // Create a three mesh
-    let geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', buffer);
-    geometry.computeVertexNormals();
-
-    return geometry;
+function createMeshForShape(mesh, motionType, layer) {
+    const _pos = mesh.localToWorld(new THREE.Vector3())
+    const position = new Jolt.Vec3(_pos.x, _pos.y, _pos.z)
+    const _quat = mesh.getWorldQuaternion(new THREE.Quaternion())
+    const quat = new Jolt.Quat(_quat.x, _quat.y, _quat.z, _quat.w)
+    const geometry = mesh.geometry
+    const num = mesh.geometry.index ? mesh.geometry.index.count / 3 : geometry.attributes.position.count / 3
+    const triangles = new Jolt.TriangleList()
+    triangles.resize(num)
+    console.warn('mesh', mesh, num)
+    if (geometry.index) {
+        for (let i = 0; i < geometry.index.count - 3000; i += 3) {
+            console.error(i / 3)
+            let t = triangles.at(i / 3)
+            let v1 = t.get_mV(0), v2 = t.get_mV(1), v3 = t.get_mV(2);
+            console.log(v1, v2, v3)
+            // geometry.attributes.position.getX(i)
+            // geometry.attributes.position.getY(i)
+            // geometry.attributes.position.getZ(i)
+            // geometry.attributes.position.getX(i + 1)
+            // geometry.attributes.position.getY(i + 1)
+            // geometry.attributes.position.getZ(i + 1)
+            // geometry.attributes.position.getX(i + 2)
+            // geometry.attributes.position.getY(i + 2)
+            // geometry.attributes.position.getZ(i + 2)
+            v1.x = geometry.attributes.position.getX(i)
+            v1.y = geometry.attributes.position.getY(i)
+            v1.z = geometry.attributes.position.getZ(i)
+            v2.x = geometry.attributes.position.getX(i + 1)
+            v2.y = geometry.attributes.position.getY(i + 1)
+            v2.z = geometry.attributes.position.getZ(i + 1)
+            v3.x = geometry.attributes.position.getX(i + 2)
+            v3.y = geometry.attributes.position.getY(i + 2)
+            v3.z = geometry.attributes.position.getZ(i + 2)
+            console.log(i)
+        }
+    } else {
+        for (let i = 0; i < geometry.attributes.position.count - 3; i += 3) {
+            let t = triangles.at(i / 3)
+            let v1 = t.get_mV(0), v2 = t.get_mV(1), v3 = t.get_mV(2);
+            // geometry.attributes.position.getX(i)
+            // geometry.attributes.position.getY(i)
+            // geometry.attributes.position.getZ(i)
+            // geometry.attributes.position.getX(i + 1)
+            // geometry.attributes.position.getY(i + 1)
+            // geometry.attributes.position.getZ(i + 1)
+            // geometry.attributes.position.getX(i + 2)
+            // geometry.attributes.position.getY(i + 2)
+            // geometry.attributes.position.getZ(i + 2)
+            // v1.x = geometry.attributes.position.getX(i)
+            // v1.y = geometry.attributes.position.getY(i)
+            // v1.z = geometry.attributes.position.getZ(i)
+            // v2.x = geometry.attributes.position.getX(i + 1)
+            // v2.y = geometry.attributes.position.getY(i + 1)
+            // v2.z = geometry.attributes.position.getZ(i + 1)
+            // v3.x = geometry.attributes.position.getX(i + 2)
+            // v3.y = geometry.attributes.position.getY(i + 2)
+            // v3.z = geometry.attributes.position.getZ(i + 2)
+            console.log(i)
+        }
+    }
+    console.warn('before init')
+    // const inMaterials = new Jolt.PhysicsMaterialList()
+    const inSettings = new Jolt.MeshShapeSettings(triangles)
+    // const shape = inSettings.Create().Get()
+    // const creationSettings = new Jolt.BodyCreationSettings(shape, position, quat, motionType, layer)
+    // const body = bodyInterface.CreateBody(creationSettings)
+    // bodyInterface.AddBody(body.GetID(), Jolt.EActivation_Activate);
+    console.warn('after init')
+    Jolt.destroy(inSettings)
+    // return body;
 }
 const init = function () {
 
@@ -135,9 +189,10 @@ const init = function () {
         document.body.appendChild(stats.dom);
         // load the bunny
         const loader = new GLTFLoader();
-        loader.load('/static/models/school/main.gltf', object => {
+        loader.load('/static/models/DamagedHelmet/DamagedHelmet.gltf', object => {
             object.scene.rotateX(-.5 * Math.PI)
             scene.add(object.scene)
+            // let initJolt = Jolt
             initJolt().then(function (_Jolt) {
                 console.warn('Jolt', _Jolt)
                 Jolt = _Jolt
@@ -168,7 +223,6 @@ const init = function () {
         Jolt.Quat.prototype.Clone = function () { return new Jolt.Quat(this.GetX(), this.GetY(), this.GetZ(), this.GetW()); };
         Jolt.AABox.prototype.ToString = function () { return `[${this.mMax.ToString()}, ${this.mMin.ToString()}]`; };
 
-
         const pos = new THREE.Vector3();
         const quat = new THREE.Quaternion();
         // // Ground
@@ -182,63 +236,36 @@ const init = function () {
         createBox(new Jolt.Vec3(0, -1, 0), new Jolt.Quat(0, 0, 0, 1), new Jolt.Vec3(5000, .5, 5000), Jolt.EMotionType_Static, LAYER_NON_MOVING)
 
         // 1. 对每个mesh添加boxShape
-        model.traverse(mesh => {
-            if (mesh.isMesh) {
-                const bbox = mesh.geometry.boundingBox
-                const boxSize = bbox.getSize(new THREE.Vector3())
-                const pos = mesh.localToWorld(new THREE.Vector3())
-                const quat = mesh.quaternion.clone()
-                createBox(new Jolt.Vec3(pos.x, pos.y, pos.z), new Jolt.Quat(quat.x, quat.y, quat.z, quat.w), new Jolt.Vec3(boxSize.x, boxSize.y, boxSize.z), Jolt.EMotionType_Static, LAYER_NON_MOVING)
-            }
-        })
-        // 2.对每个mesh添加btTriangleMesh
         // model.traverse(mesh => {
         //     if (mesh.isMesh) {
-        //         const btMesh = new Ammo.btTriangleMesh()
-        //         const _addMesh = (i, btMesh) => {
-        //             const p0 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i), mesh.geometry.attributes.position.getY(i), mesh.geometry.attributes.position.getZ(i))
-        //             const p1 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i + 1), mesh.geometry.attributes.position.getY(i + 1), mesh.geometry.attributes.position.getZ(i + 1))
-        //             const p2 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i + 2), mesh.geometry.attributes.position.getY(i + 2), mesh.geometry.attributes.position.getZ(i + 2))
-        //             btMesh.addTriangle(p0, p1, p2, false)
-        //         }
-        //         if (mesh.geometry.index) {
-        //             for (let i = 0; i < mesh.geometry.index.count; i += 3) {
-        //                 _addMesh(i, btMesh)
-        //             }
-        //         } else {
-        //             for (let i = 0; i < mesh.geometry.attributes.position.count; i += 3) {
-        //                 _addMesh(i, btMesh)
-        //             }
-        //         }
-        //         const meshShape = new Ammo.btConvexTriangleMeshShape(btMesh, false)
-        //         const transform = new Ammo.btTransform();
-        //         transform.setIdentity();
-        //         // transform.setOrigin(new Ammo.btVector3(mesh.position.x, mesh.position.y, mesh.position.z));
-        //         // transform.setRotation(new Ammo.btQuaternion(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w));
-        //         const motionState = new Ammo.btDefaultMotionState(transform);
-        //         const localInertia = new Ammo.btVector3(0, 0, 0);
-        //         meshShape.calculateLocalInertia(0, localInertia);
-        //         const rbInfo = new Ammo.btRigidBodyConstructionInfo(0, motionState, meshShape, localInertia);
-        //         const body = new Ammo.btRigidBody(rbInfo)
-        //         mesh.userData.physicsBody = body
-        //         world.addRigidBody(body)
+        //         const bbox = mesh.geometry.boundingBox
+        //         const boxSize = bbox.getSize(new THREE.Vector3())
+        //         const pos = mesh.localToWorld(new THREE.Vector3())
+        //         const quat = mesh.quaternion.clone()
+        //         createBox(new Jolt.Vec3(pos.x, pos.y, pos.z), new Jolt.Quat(quat.x, quat.y, quat.z, quat.w), new Jolt.Vec3(boxSize.x, boxSize.y, boxSize.z), Jolt.EMotionType_Static, LAYER_NON_MOVING)
         //     }
         // })
+        // 2.对每个mesh添加btTriangleMesh
+        model.traverse(mesh => {
+            if (mesh.isMesh) {
+                createMeshForShape(mesh, Jolt.EMotionType_Static, LAYER_NON_MOVING)
+            }
+        })
 
         // 2. 对每个
-        // const geometry = new THREE.BufferGeometry();
-        // const vertices = new Float32Array([
-        //     50.0, 0.0, -50.0, // v0
-        //     50.0, 10.0, -50.0, // v1
-        //     35.0, 10.0, -45.0 // v2
-        // ]);
-
+        const geometry = new THREE.BufferGeometry();
+        const vertices = new Float32Array([
+            50.0, 0.0, -50.0, // v0
+            50.0, 10.0, -50.0, // v1
+            35.0, 10.0, -45.0 // v2
+        ]);
         // // // itemSize = 3 because there are 3 values (components) per vertex
-        // geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-        // const material = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide });
-        // const mesh = new THREE.Mesh(geometry, material);
-        // scene.add(mesh)
+        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        const material = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide });
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh)
         // createBox(new Jolt.Vec3(pos.x, pos.y, pos.z), new Jolt.Quat(quat.x, quat.y, quat.z, quat.w), new Jolt.Vec3(boxSize.x, boxSize.y, boxSize.z), Jolt.EMotionType_Static, LAYER_NON_MOVING)
+        createMeshForShape(mesh, Jolt.EMotionType_Static, LAYER_NON_MOVING)
     }
 }
 function animate() {
