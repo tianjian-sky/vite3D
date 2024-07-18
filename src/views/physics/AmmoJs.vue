@@ -60,6 +60,149 @@ function createParalellepiped(sx, sy, sz, mass, pos, quat, material, margin = 0.
     createRigidBody(threeObject, shape, mass, pos, quat);
     return threeObject;
 }
+function collistionTest = (model1, model2) => {
+    let num1 = 0
+    let num2 = 0
+    const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration()
+    const dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration)
+    const broadphase = new Ammo.btDbvtBroadphase();
+    const solver = new Ammo.btSequentialImpulseConstraintSolver();
+    const world = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+    world.setGravity(new Ammo.btVector3(0, -9.8, 0))
+    const ctResults = []
+    function createRigidMeshBody(mesh, mass) {
+        const btMesh = new Ammo.btTriangleMesh()
+        const __pts = []
+        if (mesh.geometry.index) {
+            for (let i = 0; i < mesh.geometry.index.count; i += 3) {
+                const _i = mesh.geometry.index.getX(i)
+                const p0 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(_i), mesh.geometry.attributes.position.getY(_i), mesh.geometry.attributes.position.getZ(_i))
+                const p1 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(_i + 1), mesh.geometry.attributes.position.getY(_i + 1), mesh.geometry.attributes.position.getZ(_i + 1))
+                const p2 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(_i + 2), mesh.geometry.attributes.position.getY(_i + 2), mesh.geometry.attributes.position.getZ(_i + 2))
+                __pts.push(p0, p1, p2)
+                btMesh.addTriangle(p0, p1, p2, true)
+            }
+        } else {
+            for (let i = 0; i < mesh.geometry.attributes.position.count; i += 3) {
+                const p0 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i), mesh.geometry.attributes.position.getY(i), mesh.geometry.attributes.position.getZ(i))
+                const p1 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i + 1), mesh.geometry.attributes.position.getY(i + 1), mesh.geometry.attributes.position.getZ(i + 1))
+                const p2 = new Ammo.btVector3(mesh.geometry.attributes.position.getX(i + 2), mesh.geometry.attributes.position.getY(i + 2), mesh.geometry.attributes.position.getZ(i + 2))
+                __pts.push(p0, p1, p2)
+                btMesh.addTriangle(p0, p1, p2, true)
+            }
+        }
+        const meshShape = new Ammo.btConvexTriangleMeshShape(btMesh, false)
+        // const meshShape = new Ammo.btBvhTriangleMeshShape(btMesh)
+        // const meshShape = new Ammo.btGImpactMeshShape(btMesh);
+        // meshShape.setMargin(0.01);/
+        // meshShape.setLocalScaling(new Ammo.btVector3(scale.x, scale.y, scale.z));
+        // meshShape.updateBound();
+        // meshShape.updateBound();
+        const posW = mesh.getWorldPosition(new THREE.Vector3())
+        const quatW = mesh.getWorldQuaternion(new THREE.Quaternion())
+        const pos = mesh.position
+        const quat = mesh.quaternion
+        const transform = new Ammo.btTransform();
+        const transformW = new Ammo.btTransform()
+        transform.setIdentity();
+        // transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+        // transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+        transformW.setIdentity();
+        transformW.setOrigin(new Ammo.btVector3(posW.x, posW.y, posW.z));
+        transformW.setRotation(new Ammo.btQuaternion(quatW.x, quatW.y, quatW.z, quatW.w));
+        __pts.push(btMesh, meshShape, transform, transformW)
+        const motionState = new Ammo.btDefaultMotionState(transformW);
+        const localInertia = new Ammo.btVector3(0, 0, 0);
+        meshShape.calculateLocalInertia(0, localInertia);
+        __pts.push(motionState, localInertia)
+        const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, meshShape, localInertia);
+        const body = new Ammo.btRigidBody(rbInfo)
+        body.setWorldTransform(transformW)
+        __pts.push(rbInfo, body)
+        body.__pts = __pts
+        return body
+    }
+    const ptrMeshDict2 = {}
+    const testTable = new Map()
+    model1.traverse(mesh => {
+        if (!mesh.isMesh) return
+        num1++
+        mesh.geometry.computeBoundingBox()
+        mesh.updateMatrixWorld(true)
+        const box1 = mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrixWorld)
+        model2.traverse(mesh2 => {
+            if (!mesh2.isMesh) return
+            num2++
+            mesh2.geometry.computeBoundingBox()
+            mesh2.updateMatrixWorld(true)
+            const box2 = mesh2.geometry.boundingBox.clone().applyMatrix4(mesh2.matrixWorld)
+            if (box1.intersectsBox(box2)) {
+                if (!testTable.get(mesh)) {
+                    testTable.set(mesh, [])
+                }
+                if (testTable.get(mesh2) && testTable.get(mesh2).find(item => item === mesh) || testTable.get(mesh).find(item => item === mesh2)) return
+                testTable.get(mesh).push(mesh2)
+            }
+        })
+    })
+    console.warn('testTable', testTable)
+    {
+        const resultCallback = new Ammo.ConcreteContactResultCallback()
+        resultCallback.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1) {
+            let contactPoint = Ammo.wrapPointer(cp, Ammo.btManifoldPoint);
+            const distance = contactPoint.getDistance();
+            const pa = contactPoint.getPositionWorldOnA();
+            const pb = contactPoint.getPositionWorldOnB();
+            const p_lpa = contactPoint.m_localPointA
+            const p_lpb = contactPoint.m_localPointB
+            const p_mpwb = contactPoint.m_positionWorldOnB
+            const p_mpwa = contactPoint.m_positionWorldOnA
+            let colWrapper0 = Ammo.wrapPointer(colObj0Wrap, Ammo.btCollisionObjectWrapper);
+            let rb0 = Ammo.castObject(colWrapper0.getCollisionObject(), Ammo.btRigidBody);
+            let colWrapper1 = Ammo.wrapPointer(colObj1Wrap, Ammo.btCollisionObjectWrapper);
+            let rb1 = Ammo.castObject(colWrapper1.getCollisionObject(), Ammo.btRigidBody);
+            const mesh_a = ptrMeshDict2[rb0.ptr]
+            const mesh_b = ptrMeshDict2[rb1.ptr]
+            console.error('--result', rb0.ptr, rb1.ptr)
+            ctResults.push([mesh_a, mesh_b, distance, pa, pb, p_lpa, p_lpb, p_mpwb, p_mpwa])
+            // Ammo.destroy(contactPoint)
+            // Ammo.destroy(colWrapper0)
+            // Ammo.destroy(colWrapper1)
+            // Ammo.destroy(rb0)
+            // Ammo.destroy(rb1)
+            // Ammo.destroy(colWrapper0)
+            // Ammo.destroy(colWrapper1)
+        }
+        for (const mesh of testTable.keys()) {
+            if (!mesh.isMesh) return
+            if (!testTable.get(mesh).length) return
+            const body = createRigidMeshBody(mesh, 0)
+            world.addRigidBody(body)
+            mesh.userData._rigidBody = body
+            ptrMeshDict2[body.ptr] = mesh
+            if (mesh.userData._rigidBody) {
+                let q_num = 0
+                testTable.get(mesh).forEach(mesh2 => {
+                    q_num++
+                    if (!mesh2.isMesh) return
+                    const body2 = createRigidMeshBody(mesh2, 0)
+                    ptrMeshDict2[body2.ptr] = mesh2
+                    world.addRigidBody(body2)
+                    mesh2.userData._rigidBody = body2
+                    world.contactPairTest(mesh.userData._rigidBody, mesh2.userData._rigidBody, resultCallback)
+                    world.removeCollisionObject(body2)
+                    body2.__pts.forEach(ptr => Ammo.destroy(ptr))
+                    delete body2.__pts
+                })
+            }
+            world.removeCollisionObject(body)
+            body.__pts.forEach(ptr => Ammo.destroy(ptr))
+            delete body.__pts
+            console.warn('performance.memory.usedJSHeapSize', performance.memory.usedJSHeapSize / 1024 / 1024)
+        }
+        console.warn('--ctResults', ctResults)
+    }
+}
 const init = function () {
 
     // reusable variables
