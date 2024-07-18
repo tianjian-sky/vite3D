@@ -105,19 +105,18 @@ function collistionTest = (model1, model2) => {
         const transform = new Ammo.btTransform();
         const transformW = new Ammo.btTransform()
         transform.setIdentity();
-        // transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
-        // transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
-        transformW.setIdentity();
-        transformW.setOrigin(new Ammo.btVector3(posW.x, posW.y, posW.z));
-        transformW.setRotation(new Ammo.btQuaternion(quatW.x, quatW.y, quatW.z, quatW.w));
+        transform.setOrigin(new Ammo.btVector3(posW.x, posW.y, posW.z));
+        transform.setRotation(new Ammo.btQuaternion(quatW.x, quatW.y, quatW.z, quatW.w));
+        // transformW.setIdentity();
+        // transformW.setOrigin(new Ammo.btVector3(posW.x, posW.y, posW.z));
+        // transformW.setRotation(new Ammo.btQuaternion(quatW.x, quatW.y, quatW.z, quatW.w));
         __pts.push(btMesh, meshShape, transform, transformW)
-        const motionState = new Ammo.btDefaultMotionState(transformW);
+        const motionState = new Ammo.btDefaultMotionState(transform);
         const localInertia = new Ammo.btVector3(0, 0, 0);
         meshShape.calculateLocalInertia(0, localInertia);
         __pts.push(motionState, localInertia)
         const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, meshShape, localInertia);
         const body = new Ammo.btRigidBody(rbInfo)
-        body.setWorldTransform(transformW)
         __pts.push(rbInfo, body)
         body.__pts = __pts
         return body
