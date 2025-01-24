@@ -47,13 +47,11 @@ glob('**/*.{ts,tsx,js,jsx}', {
         // get import node
         traverse.default(ast, {
             ImportDeclaration: function(path) {
-                const target = path.node.specifiers.find(item => item.type == 'ImportSpecifier')
+                const target = path.node.specifiers.find(item => item.type == 'ImportSpecifier' && item.imported.name == importName) // 暂不考虑 default import
                 if (target) {
-                    if (target && target.imported.name == importName) {
-                        needTraverse = true
-                        if (target.local.name != target.imported.name) {
-                            importNameAlias = target.local.name
-                        }
+                    needTraverse = true
+                    if (target.local.name != target.imported.name) {
+                        importNameAlias = target.local.name
                     }
                 }
             }
